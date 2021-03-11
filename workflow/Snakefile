@@ -1,0 +1,42 @@
+rule all:
+    input:
+        "wordlist.csv",
+        "wordlist.txt"
+
+
+rule make_compound_list:
+    input:
+        config["WIKIPARSE_DB"]
+    output:
+        "compound_list.txt"
+    shell:
+        "sqlite3 {input} < make_compound_list.sql > {output}"
+
+
+rule figure_skating:
+    input:
+        "lemma_freqs.csv"
+    output:
+        "freqs.parquet"
+    shell:
+        "python figure_skating.py"
+
+
+rule make_wordlist:
+    input:
+        "kotus-sanalista_v1/kotus-sanalista_v1.xml",
+        "compound_list.txt",
+        "freqs.parquet"
+    output:
+        "wordlist.csv"
+    shell:
+        "python make_wordlist.py --filter nss-no-compound --drop-dupes --size 12000 --drop-reg-der --output-fmt csv > {output}"
+
+
+rule convert_wordlist_to_bare:
+    input:
+        "wordlist.csv"
+    output:
+        "wordlist.txt"
+    shell:
+        "python convert_wordlist_to_bare.py < {input} > {output}"
