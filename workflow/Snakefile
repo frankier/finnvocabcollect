@@ -30,7 +30,7 @@ rule make_wordlist:
     output:
         "wordlist.csv"
     shell:
-        "python make_wordlist.py --filter nss-no-compound --drop-dupes --size 12000 --drop-reg-der --output-fmt csv > {output}"
+        "python make_wordlist.py --filter nss-no-compound --drop-dupes --drop-reg-der --output-fmt csv > {output}"
 
 
 rule convert_wordlist_to_bare:

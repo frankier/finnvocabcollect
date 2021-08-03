@@ -3,6 +3,7 @@ import click
 from lxml import etree
 import pandas
 from functools import reduce
+import numpy as np
 
 
 NSS_XML_PATH = "kotus-sanalista_v1/kotus-sanalista_v1.xml"
@@ -76,6 +77,8 @@ def read_nss(no_compound=False):
 @click.option("--size", type=int, required=False)
 def main(output_fmt, pos, shuffle, filter, drop_dupes, drop_reg_der, size):
     freqs_df = pandas.read_parquet("freqs.parquet")
+
+    freqs_df["zipf"] = np.log10(1e9 * freqs_df["freq"])
 
     if drop_dupes:
         # We drop dupes early so that we don't end up with e.g. minä
