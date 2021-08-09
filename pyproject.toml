@@ -11,6 +11,8 @@ click = "^7.1.2"
 lxml = "^4.6.2"
 pyarrow = "^3.0.0"
 snakemake = "^6.0.4"
+langcodes = {version = "^3.1.0", extras = ["data"]}
+nltk = "^3.6.2"
 
 [tool.poetry.dev-dependencies]
 
