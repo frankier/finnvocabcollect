@@ -1,9 +1,12 @@
 import sys
+import numpy
 import click
 from lxml import etree
 import pandas
 from functools import reduce
 import numpy as np
+import os
+from os.path import join as pjoin
 
 
 NSS_XML_PATH = "kotus-sanalista_v1/kotus-sanalista_v1.xml"
@@ -75,38 +78,67 @@ def read_nss(no_compound=False):
 @click.option("--drop-dupes/--keep-dupes")
 @click.option("--drop-reg-der/--keep-reg-der")
 @click.option("--size", type=int, required=False)
-def main(output_fmt, pos, shuffle, filter, drop_dupes, drop_reg_der, size):
-    freqs_df = pandas.read_parquet("freqs.parquet")
+@click.option("--intermediates-out", type=click.Path())
+def main(
+    output_fmt,
+    pos,
+    shuffle,
+    filter,
+    drop_dupes,
+    drop_reg_der,
+    size,
+    intermediates_out,
+):
+    if intermediates_out:
+        os.makedirs(intermediates_out, exist_ok=True)
 
+    freqs_df = pandas.read_parquet("freqs.parquet")
     freqs_df["zipf"] = np.log10(1e9 * freqs_df["freq"])
+
+    def keep_rows(keep_condition, out_base):
+        nonlocal freqs_df
+        if intermediates_out:
+            out_path = pjoin(intermediates_out, out_base)
+            filtered_df = freqs_df[~keep_condition]
+            print(f"Saving {len(filtered_df)} rows to {out_base}", file=sys.stderr)
+            filtered_df.to_csv(out_path, index=False)
+        freqs_df = freqs_df[keep_condition]
 
     if drop_dupes:
         # We drop dupes early so that we don't end up with e.g. minä
         freqs_df.drop_duplicates("lemma", inplace=True)
 
     if filter not in ("none-no-pos", "none"):
-        nss = read_nss(filter == "nss-no-compound")
-        freqs_df = freqs_df[freqs_df["lemma"].isin(nss)]
+        nss = read_nss(False)
+        keep_rows(freqs_df["lemma"].isin(nss), "out_of_nss.csv")
+        if filter == "nss-no-compound":
+            nss = read_nss(True)
+            keep_rows(freqs_df["lemma"].isin(nss), "compounds.csv")
         del nss
 
     if filter != "none-no-pos":
-        freqs_df = freqs_df[freqs_df["pos"].isin(pos)]
+        keep_rows(freqs_df["pos"].isin(pos), "nopos.csv")
 
     if drop_reg_der:
-        freqs_df = freqs_df[
+        keep_rows(
             ~reduce(lambda a, b: a | b, (
                 freqs_df["lemma"].str.endswith(prod_suffix)
                 & (freqs_df["pos"] == prod_pos)
                 for prod_pos, prod_suffix
                 in PRODUCTIVE_DERIVATIONS
-            ))
-        ]
+            )),
+            "drop_reg_der.csv"
+        )
 
     if size is not None:
         freqs_df = freqs_df.head(size)
 
     if shuffle:
         freqs_df = freqs_df.sample(frac=1).reset_index(drop=True)
+
+    print(f"Saving {len(freqs_df)} rows to stdout")
+    for zipf in numpy.linspace(7, 0, num=15):
+        print(len(freqs_df[freqs_df['zipf'] > zipf]), "rows with zipf >", zipf, file=sys.stderr)
 
     freqs_df.to_csv(sys.stdout, index=False)
 

@@ -28,9 +28,10 @@ rule make_wordlist:
         "compound_list.txt",
         "freqs.parquet"
     output:
-        "wordlist.csv"
+        wordlist = "wordlist.csv",
+        dropped = directory("dropped")
     shell:
-        "python make_wordlist.py --filter nss-no-compound --drop-dupes --drop-reg-der --output-fmt csv > {output}"
+        "python make_wordlist.py --intermediates-out {output.dropped} --filter nss-no-compound --drop-dupes --drop-reg-der --output-fmt csv > {output.wordlist}"
 
 
 rule convert_wordlist_to_bare:
