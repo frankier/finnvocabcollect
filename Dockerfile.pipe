@@ -1,0 +1,42 @@
+FROM debian:bullseye-slim
+
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive \
+    apt-get dist-upgrade -yq && \
+    DEBIAN_FRONTEND=noninteractive \
+    apt-get install -yq \
+    zstd \
+    xz-utils \
+    git \
+    build-essential \
+    wget \
+    bash \
+    coreutils \
+    bzip2 \
+    ca-certificates \
+    curl \
+    cmake \
+    && \
+    rm -rf /var/lib/apt/lists/*
+
+WORKDIR /finnvocabcollect/
+
+ENV LANG='C.UTF-8' LC_ALL='C.UTF-8'
+
+RUN python3 -m pip install --upgrade poetry==1.1.7
+
+ADD pyproject.toml poetry.lock /finnvocabcollect/
+
+RUN poetry export \
+      --without-hashes > requirements.txt && \
+    sed -i '/pytorch/d' requirements.txt && \
+    python3 -m pip install -r requirements.txt && \
+    rm requirements.txt && \
+    rm -rf /root/.cache
+
+RUN echo "/finnvocabcollect" > \
+    /usr/local/lib/python3.8/dist-packages/finnvocabcollect.pth
+
+RUN ln -sf /usr/bin/python3 /usr/bin/python
+
+ADD . /finnvocabcollect/

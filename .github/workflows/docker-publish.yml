@@ -1,0 +1,56 @@
+name: Docker
+
+on:
+  push:
+    # Publish `main` as Docker `latest` image.
+    branches:
+      - main
+
+    # Publish `v1.2.3` tags as releases.
+    tags:
+      - v*
+
+  # Run tests for any PRs.
+  pull_request:
+
+jobs:
+  build_publish_containers:
+    runs-on: ubuntu-latest
+    env:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      DOCKER_OPTS: "--registry-mirror=https://mirror.gcr.io"
+
+    if: github.event_name == 'push'
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: textbook/git-checkout-submodule-action@master
+
+      - name: Build/push pipe
+        uses: whoan/docker-build-with-cache-action@v5
+        with:
+          registry: ghcr.io
+          image_name: frankierfinnvocabcollect-pipe
+          dockerfile: Dockerfile.pipe
+          username: ${{ github.actor }}
+          password: ${{ secrets.CR_PAT }}
+
+      - name: Build/push web
+        uses: whoan/docker-build-with-cache-action@v5
+        with:
+          registry: ghcr.io
+          image_name: frankier/finnvocabcollect-web
+          dockerfile: Dockerfile.web
+          username: ${{ github.actor }}
+          password: ${{ secrets.CR_PAT }}
+
+      - name: Trigger build on Rahti
+        uses: joelwmale/webhook-action@master
+        with:
+          url: ${{ secrets.RAHTI_WEBHOOK_URL }}
+
+      - uses: act10ns/slack@v1
+        with:
+          status: ${{ job.status }}
+          steps: ${{ toJson(steps) }}
+        if: always()

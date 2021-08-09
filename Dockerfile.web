@@ -1,0 +1,40 @@
+FROM quay.io/jitesoft/debian:10-slim
+
+LABEL org.opencontainers.image.source https://github.com/frankier/finnvocabcollect
+
+RUN apt-get update && \
+    apt-get install -y \
+      rsync git build-essential \
+      python3 python3-dev python3-pip && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN python3 -m pip install --upgrade \
+    pip==20.2.4 \
+    setuptools==50.3.2 \
+    poetry==1.1.4 \
+    poetry-core==1.0.0 \
+    uwsgi
+
+RUN ln -sf /usr/bin/python3.7 /usr/bin/python
+
+USER nobody
+
+WORKDIR /opt/finnvocabcollect
+
+RUN mkdir -p /opt/finnvocabcollect
+COPY selfassess/pyproject.toml selfassess/poetry.lock ./
+
+USER root
+
+RUN poetry export \
+      --without-hashes > requirements.txt && \
+    python3 -m pip install -r requirements.txt && \
+    rm requirements.txt && \
+    rm -rf /root/.cache
+
+USER nobody
+
+COPY selfassess ./
+
+EXPOSE 8080
+CMD ["uwsgi", "--http", "0.0.0.0:8080", "--module", "app:server", "--processes", "2", "--threads", "8"]
