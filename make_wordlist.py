@@ -27,6 +27,16 @@ PRODUCTIVE_DERIVATIONS = [
 ]
 
 
+INTERMEDIATES_HELP = """
+Specify a path to put output files detailing removed words:
+out_of_nss.csv --- Words not in NykySuomen Sanalista
+compounds.csv --- Words marked as compounds in NSS
+nopos.csv --- Words not in the specified POS list
+drop_reg_der.csv --- Words which appear to have one of the regular derivation
+endings
+""".strip()
+
+
 def read_compound_list():
     res = set()
     with open(COMPOUND_LIST) as compounds:
@@ -38,6 +48,10 @@ def read_compound_list():
 
 
 def read_nss(no_compound=False):
+    """
+    Reads Kotimaisten Kielten Keskuksen Nykysuomen Sanalista from
+    https://kaino.kotus.fi/sanat/nykysuomi/
+    """
     res = set()
     if no_compound:
         compound_list = read_compound_list()
@@ -78,7 +92,7 @@ def read_nss(no_compound=False):
 @click.option("--drop-dupes/--keep-dupes")
 @click.option("--drop-reg-der/--keep-reg-der")
 @click.option("--size", type=int, required=False)
-@click.option("--intermediates-out", type=click.Path())
+@click.option("--intermediates-out", type=click.Path(), help=INTERMEDIATES_HELP)
 def main(
     output_fmt,
     pos,
@@ -104,22 +118,27 @@ def main(
             filtered_df.to_csv(out_path, index=False)
         freqs_df = freqs_df[keep_condition]
 
+    # Drop duplicates
     if drop_dupes:
         # We drop dupes early so that we don't end up with e.g. minä
         freqs_df.drop_duplicates("lemma", inplace=True)
 
     if filter not in ("none-no-pos", "none"):
+        # Filter according to NSS
         nss = read_nss(False)
         keep_rows(freqs_df["lemma"].isin(nss), "out_of_nss.csv")
         if filter == "nss-no-compound":
+            # Filter according to compounds in NSS
             nss = read_nss(True)
             keep_rows(freqs_df["lemma"].isin(nss), "compounds.csv")
         del nss
 
     if filter != "none-no-pos":
+        # Filter according to POS
         keep_rows(freqs_df["pos"].isin(pos), "nopos.csv")
 
     if drop_reg_der:
+        # Filter according to producive derivations
         keep_rows(
             ~reduce(lambda a, b: a | b, (
                 freqs_df["lemma"].str.endswith(prod_suffix)
