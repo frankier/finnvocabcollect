@@ -1,0 +1,17 @@
+<div id="wordinfo">
+    <h3 class="tr ma0 normal">
+        {{ batch_complete }}/
+        {%- if batch_target is not none -%}
+            {{ batch_target }}
+        {%- else -%}
+            unlimited
+        {%- endif -%}
+    </h3>
+    <h1>{{ word }}</h1>
+    <input type="hidden" name="word" value="{{ word }}">
+    <input type="hidden" name="word_id" value="{{ word_id }}">
+    <input type="hidden" name="complete" value="{{ batch_complete }}">
+    {% if batch_target is not none %}
+        <input type="hidden" name="count" value="{{ batch_target }}">
+    {% endif %}
+</div>

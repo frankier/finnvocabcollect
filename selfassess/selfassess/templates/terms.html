@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block body %}
+<form method="post" class="ma5 mw7 center f5">
+
+    <fieldset class="ba b--transparent ph0 mh0">
+        <legend class="f4 fw6 ph0 mh0">Conditions</legend>
+
+        <div class="flex items-center ma3">
+            <input class="w2 h2 mr3 flex-none" type="checkbox" name="paymentacc" id="paymentacc" value="paymentacc">
+            <label for="paymentacc" class="lh-copy">
+                I understand that payment is conditional upon providing accurate
+                data about my Finnish vocabulary knowledge and answering the
+                mini-exam to the best of my ability. Participants providing
+                inaccurate answers, as defined and determined by the investigators
+                of the study, will be removed from the study without payment.
+            </label>
+        </div>
+
+        <div class="flex items-center ma3">
+            <input class="w2 h2 mr3 flex-none" type="checkbox" name="timebox" id="timebox" value="timebox">
+            <label for="timebox" class="lh-copy">
+                I understand that I must start the study within a week (168 hours)
+                of receiving the invitation email and complete the study within a
+                week (168 hours) of starting it to be eligible for payment.
+            </label>
+        </div>
+
+        <div class="flex items-center ma3">
+            <input class="w2 h2 mr3 flex-none" type="checkbox" name="paymentdelay" id="paymentdelay" value="paymentdelay">
+            <label for="paymentdelay" class="lh-copy">
+                I understand I will only receive instructions about payment after
+                all participants have completed the task.
+            </label>
+        </div>
+
+        <div class="flex items-center ma3">
+            <input class="w2 h2 mr3 flex-none" type="checkbox" name="nostudy" id="nostudy" value="nostudy">
+            <label for="nostudy" class="lh-copy">
+                I agree not to study Finnish vocabulary during the study. I
+                agree to answer the questions in the mini-exam to the best of my
+                ability without using any external resources.
+            </label>
+        </div>
+    </fieldset>
+
+    <fieldset class="ba b--transparent ph0 mh0">
+        <legend class="f4 fw6 ph0 mh0">Usage of data</legend>
+
+        <div class="flex items-center ma3">
+            <input class="w2 h2 mr3 flex-none" type="checkbox" name="colldev" id="colldev" value="colldev">
+            <label for="colldev" class="lh-copy">
+                I understand that as well as my responses being collected,
+                information about the amount of time I spend answering as well as
+                the type of my device (tablet/phone/computer) is being collected.
+            </label>
+        </div>
+
+        <div class="flex items-center ma3">
+            <input class="w2 h2 mr3 flex-none" type="checkbox" name="pubdata" id="pubdata" value="pubdata">
+            <label for="pubdata" class="lh-copy">
+                I understand that after removing personally identifying
+                information, the resulting data will be made publicly available. I
+                understand there will be no or only minimal usage restrictions upon
+                this data in order to encourage as much activity beneficial to
+                adult learners of Finnish as possible.
+            </label>
+        </div>
+
+        <div class="flex items-center ma3">
+            <input class="w2 h2 mr3 flex-none" type="checkbox" name="norevoke" id="norevoke" value="norevoke">
+            <label for="norevoke" class="lh-copy">
+                I understand my data in the response set cannot be revoked and as
+                such I promise not to identify my own responses to others.
+            </label>
+        </div>
+    </fieldset>
+
+    <div class="flex items-center ma4 justify-around">
+        <button type="submit" name="decision" value="agree">Agree and return to checklist</button>
+
+        <button type="submit" name="decision" value="withdraw">Withdraw from study</button>
+    </div>
+
+</form>
+{% endblock %}

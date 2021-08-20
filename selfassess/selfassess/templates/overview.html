@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% macro box(type) -%}
+    <div class="mh1 mv3 dib pt2 w3 h3 v-mid tc f3 ba bw3 br3
+        {% if type == "tick" %}
+            b--dark-green bg-green washed-green">✓
+        {% elif type == "cross" %}
+            b--dark-red bg-red washed-red">✗
+        {% else %}
+            b--gold bg-yellow washed-yellow b">⁓
+        {% endif %}
+    </div>
+{%- endmacro %}
+
+{% block body %}
+
+<section class="ma5 mw7 center f4 lh-copy">
+    <ol>
+
+        <li>
+            {% if accepted %}
+                {{ box("tick") }}
+            {% else %}
+                {{ box("cross") }}
+            {% endif %}
+            {% if not accepted %}
+                <a href="{{ url_for("terms") }}">
+            {% endif %}
+                Read and approve the terms of participation and payment
+            {% if not accepted %}
+                </a>
+            {% endif %}
+        </li>
+
+        <li>
+            {% if language_proof == "accepted" %}
+                {{ box("tick") }}
+            {% elif language_proof == "pending" %}
+                {{ box("dash") }}
+            {% else %}
+                {{ box("cross") }}
+            {% endif %}
+            {% if language_proof == "none" %}
+                <a href="{{ url_for("proof") }}">
+            {% endif %}
+                Submit your basic information and language proof
+            {% if language_proof == "none" %}
+                </a>
+            {% endif %}
+            {% if language_proof == "accepted" %}
+                <ul class="ml6">
+                    <li>Approved</li>
+                </ul>
+            {% elif language_proof == "pending" %}
+                <ul class="ml6">
+                    <li>Awaiting approval</li>
+                </ul>
+            {% endif %}
+        </li>
+
+        <li
+            {% if language_proof == "none" or not accepted %}
+                class="o-40"
+            {% endif %}
+        >
+            {% if selfassess == "complete" %}
+                {{ box("tick") }}
+            {% elif selfassess == "pending" %}
+                {{ box("dash") }}
+            {% else %}
+                {{ box("cross") }}
+            {% endif %}
+            Complete the self-assessment
+            <ul class="ml6">
+                {% if language_proof != "none" and accepted %}
+                    <li>
+                        <a href="{{ url_for("selfassess") }}">
+                            Continuous mode
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for("selfassess") }}?count=300">
+                            Do 300 (= 30 mins)
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for("selfassess") }}?count=500">
+                            Do 500 (= 45 mins)
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for("selfassess") }}?count=1000">
+                            Do 1000 (= 90 mins)
+                        </a>
+                    </li>
+                    <li>
+                        <form action="{{ url_for("selfassess") }}">
+                            Do
+                            <input name="count" type="number" value="100" min="1" max="{{ total_words }}" size="8">
+                            <button type="submit">Go</button>
+                        </form>
+                    </li>
+                {% endif %}
+                {% if selfassess == "complete" %}
+                    <li>Approved</li>
+                {% elif selfassess == "pending" %}
+                    <li>Awaiting approval</li>
+                {% else %}
+                    <li>{{ completed_words }}/{{ total_words }} completed</li>
+                {% endif %}
+            </ul>
+        </li>
+
+        <li
+            {% if selfassess != "pending" or selfassess != "complete" %}
+                class="o-40"
+            {% endif %}
+        >{{ box("cross") }} Complete the mini-exam
+            <ul class="ml6">
+                <li>
+                    Once you have finished the self-assessment.
+                </li>
+            </ul>
+        </li>
+
+        <li
+            {% if miniexam != "complete" %}
+                class="o-40"
+            {% endif %}
+        >{{ box("cross") }} Get paid
+            <ul class="ml6">
+                <li>
+                    Once all participants have finished, everyone will be sent
+                    a link to get paid directly by the University of Jyväskylä.
+                </li>
+            </ul>
+        </li>
+    </ol>
+</section>
+    
+{% endblock %}

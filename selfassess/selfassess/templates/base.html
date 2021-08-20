@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="https://unpkg.com/tachyons@4.12.0/css/tachyons.min.css"/>
+    <!--  https://unpkg.com/htmx.org@1.5.0/dist/htmx.js -->
+    <script src="{{ url_for('static', filename='htmx.js') }}"></script>
+    <script src="https://unpkg.com/hyperscript.org@0.8.1"></script>
+    <title>Finnish vocabulary self-assessment</title>
+  </head>
+  <body>
+    <div class="flex justify-between ma3">
+      <div>
+        {% block topbar %}{% endblock %}
+      </div>
+      <h3 class="normal">Logged in as <span class="courier">{{ email }}</span></h3>
+    </div>
+
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        {% for message in messages %}
+          <div class="bg-light-yellow mw7 center lh-copy ph2 pv1 tc ma3 pointer" _="on click hide me">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    {% block body %}{% endblock %}
+  </body>
+</html>

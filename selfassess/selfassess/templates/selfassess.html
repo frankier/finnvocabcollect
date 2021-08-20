@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% macro box(number) -%}
+
+    <button
+        _="on keypress[key is '{{ number }}'] from <body/> call me.click()
+           on mouseover add .bg-light-yellow to #legentry_{{ number }}
+           on mouseout remove .bg-light-yellow from #legentry_{{ number }}"
+        type="submit"
+        name="rating"
+        value="{{ number }}"
+        class="w3 h3 mh2">{{ number }}</button>
+{%- endmacro %}
+
+{% macro legentry(number, desc) -%}
+    <div class="flex items-center pa2" id="legentry_{{ number }}">
+        <div class="flex-none w2 h2 pt1 ba tc v-btm">{{ number }}</div>
+        <div class="ml3">
+            {{ desc|safe }}
+        </div>
+    </div>
+{%- endmacro %}
+
+{% block topbar %}
+    <h3><a href="/">← Return to study overview</a></h3>
+{% endblock %}
+
+{% block body %}
+<input
+    type="hidden"
+    name="event"
+    value="selfassesswindowfocus"
+    hx-post="{{ url_for("track") }}"
+    hx-trigger="focus from:window">
+<input
+    type="hidden"
+    name="event"
+    value="selfassesswindowblur"
+    hx-post="{{ url_for("track") }}"
+    hx-trigger="blur from:window">
+<form
+     method="post"
+     class="ma5 mt0 mw7 center f3 tc"
+     hx-post="{{ url_for("selfassess") }}"
+     hx-target="#wordinfo"
+     hx-swap="outerHTML"
+>
+    {% include "wordinfo_snippet.html" %}
+    <div class="flex items-center justify-center ma3">
+        {{ box(1) }}
+        {{ box(2) }}
+        {{ box(3) }}
+        {{ box(4) }}
+        {{ box(5) }}
+    </div>
+    <section id="legend" class="f4 tl mw7 center mv4">
+        {{ legentry(1, "I have never seen the word before.") }}
+        {{ legentry(2, "I have probably seen the word before, but don't know the meaning.") }}
+        {{ legentry(3, "I have definitely seen the word before, but don't know the meaning.<br>/ I have tried to learn the word but have forgotten the meaning.") }}
+        {{ legentry(4, "I probably know the word's meaning or am able to guess.") }}
+        {{ legentry(5, "I absolutely know the word's meaning.") }}
+    </section>
+    <img src="{{ url_for('static', filename='scale_explain.svg') }}">
+    <div class="tr" id="progress">{{ cur_word_idx }}/{{ total_words }}</div>
+</form>
+{% endblock %}

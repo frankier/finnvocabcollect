@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block body %}
+<form method="post" enctype="multipart/form-data" class="ma5 mw7 center f5">
+
+    <div class="flex items-center ma3">
+        <label class="w5" for="givenname">
+            Given name<br>
+            <span class="i f6">(Will be used for payment purposes.)</span>
+        </label>
+        <input class="ml3" type="textbox" name="givenname" id="givenname" required>
+    </div>
+
+    <div class="flex items-center ma3">
+        <label class="w5" for="surname">
+            Surname<br>
+            <span class="i f6">(Will be used for payment purposes.)</span>
+        </label>
+        <input class="ml3" type="textbox" name="surname" id="surname" required>
+    </div>
+
+    <div class="flex items-center ma3">
+        <input class="flex-none" type="file" name="proof" id="proof" accept="image/*" capture="camera" required>
+        <label for="proof" class="lh-copy">
+
+            Please upload a photo showing the following:
+
+            <ol>
+                <li>Your face</li>
+                <li>Photo ID</li>
+                <li>The certificate with your name and the grade(s) clearly visible</li>
+            </ol>
+
+            The photo is used for verification only and will be deleted after
+            the details are confirmed.
+        </label>
+    </div>
+
+    <div class="flex items-center ma4 justify-around">
+        <input type="submit" name="submit" value="Upload and return to checklist">
+    </div>
+
+</form>
+{% endblock %}
