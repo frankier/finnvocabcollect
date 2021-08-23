@@ -37,4 +37,4 @@ USER nobody
 COPY selfassess ./
 
 EXPOSE 8080
-CMD ["uwsgi", "--http", "0.0.0.0:8080", "--module", "app:server", "--processes", "2", "--threads", "8"]
+CMD ["uwsgi", "--http", "0.0.0.0:8080", "--module", "selfassess.app:app", "--processes", "2", "--threads", "8"]
