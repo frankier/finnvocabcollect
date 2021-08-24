@@ -32,7 +32,7 @@ RUN poetry export \
     rm requirements.txt && \
     rm -rf /root/.cache
 
-RUN echo "/selfassess" > \
+RUN echo "/opt/finnvocabcollect/selfassess" > \
     /usr/local/lib/python3.7/dist-packages/selfassess.pth
 
 USER nobody
