@@ -13,7 +13,7 @@ RUN python3 -m pip install --upgrade \
     setuptools==50.3.2 \
     poetry==1.1.4 \
     poetry-core==1.0.0 \
-    uwsgi
+    hypercorn
 
 RUN ln -sf /usr/bin/python3.7 /usr/bin/python
 
@@ -37,4 +37,4 @@ USER nobody
 COPY selfassess ./
 
 EXPOSE 8080
-CMD ["uwsgi", "--http", "0.0.0.0:8080", "--module", "selfassess.app:app", "--processes", "2", "--threads", "8"]
+CMD ["hypercorn", "--insecure-bind", "0.0.0.0:8080", "--module", "selfassess.app:app", "--workers", "2", "--threads", "8"]
