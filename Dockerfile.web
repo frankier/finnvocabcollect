@@ -40,4 +40,4 @@ USER nobody
 COPY selfassess ./
 
 EXPOSE 8080
-CMD ["hypercorn", "--insecure-bind", "0.0.0.0:8080", "--workers", "2", "selfassess.app:app"]
+CMD ["hypercorn", "--bind", "0.0.0.0:8080", "--workers", "2", "selfassess.app:app"]
