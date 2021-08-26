@@ -13,12 +13,22 @@ from quart import (
 from quart.templating import render_template
 from werkzeug.local import LocalProxy
 from .database import (
-    Participant, Word, ResponseSlot, Response, SessionLogEntry, SessionEvent
+    Participant,
+    Word,
+    ResponseSlot,
+    Response,
+    SessionLogEntry,
+    SessionEvent,
+    MiniexamSlot,
+    MiniexamResponse,
+    MiniexamResponseType,
+    MiniexamResponseLanguage
 )
 from sqlalchemy import select
 from sqlalchemy import func
-from sqlalchemy.orm import scoped_session
+from sqlalchemy.orm import contains_eager, scoped_session, joinedload, aliased
 from .utils import get_async_session
+import random
 
 app = Quart(__name__)
 app.config["SERVER_NAME"] = os.environ["SERVER_NAME"]
@@ -113,12 +123,30 @@ async def overview():
         language_proof = "pending"
     else:
         language_proof = "none"
+    selfassess_finished = user.selfassess_finish_date is not None
+    selfassess_accepted = user.selfassess_accept_date is not None
+    if selfassess_finished and selfassess_accepted:
+        selfassess = "accepted"
+    elif selfassess_finished:
+        selfassess = "pending"
+    else:
+        selfassess = "none"
+    miniexam_finished = user.miniexam_finish_date is not None
+    miniexam_accepted = user.miniexam_accept_date is not None
+    if miniexam_finished and miniexam_accepted:
+        miniexam = "accepted"
+    elif miniexam_finished:
+        miniexam = "pending"
+    else:
+        miniexam = "none"
     completed_words = user.next_response
     total_words = await get_total_words()
     return await render_template(
         "overview.html",
         accepted=user.accept_date is not None,
         language_proof=language_proof,
+        selfassess=selfassess,
+        miniexam=miniexam,
         completed_words=completed_words,
         total_words=total_words,
     )
@@ -213,6 +241,67 @@ async def ajax_redirect(url):
         return redirect(url)
 
 
+def recent_responses():
+    subq = select(
+        Response,
+        func.row_number().over(
+            partition_by=Response.response_slot_id,
+            order_by=Response.timestamp
+        ).label("rownb")
+    )
+    subq = subq.subquery(name="subq")
+    aliased_responses = aliased(Response, alias=subq)
+    return (
+        select(aliased_responses)
+        .options(joinedload(aliased_responses.slot))
+        .filter(subq.c.rownb == 1)
+    )
+
+
+async def get_miniexam_questions():
+    grouped = {}
+    for response, in (await dbsess.execute(recent_responses())):
+        print("response")
+        print(response)
+        print(response.slot)
+        grouped.setdefault(response.rating, []).append(response.slot.word_id)
+    print(grouped)
+
+    num_groups = len(grouped)
+    miniexam_questions = num_groups * MINIEXAM_QUESTIONS_PER_RATING
+    word_ids = []
+    grouped_sorted = sorted(
+        grouped.values(),
+        key=lambda response_slots: len(response_slots)
+    )
+    for idx, response_slot in enumerate(grouped_sorted):
+        popsize = len(response_slot)
+        if popsize < MINIEXAM_QUESTIONS_PER_RATING:
+            word_ids.extend(response_slot)
+            miniexam_questions -= popsize
+        else:
+            sampsize = miniexam_questions // (num_groups - idx)
+            word_ids.extend(random.sample(response_slot, sampsize))
+            miniexam_questions -= sampsize
+    print(len(word_ids), word_ids)
+    random.shuffle(word_ids)
+    return word_ids
+
+
+MINIEXAM_QUESTIONS_PER_RATING = 20
+
+
+async def finalise_selfassess(user):
+    user.selfassess_finish_date = datetime.datetime.now()
+    for idx, word_id in enumerate((await get_miniexam_questions())):
+        dbsess.add(MiniexamSlot(
+            miniexam_order=idx,
+            participant=user,
+            word_id=word_id
+        ))
+    await dbsess.commit()
+
+
 @app.route("/selfassess", methods=['GET', 'POST'])
 @user_required
 async def selfassess():
@@ -222,9 +311,12 @@ async def selfassess():
     if request.method == 'POST':
         form = await request.form
         batch_complete = int(form["complete"])
-        batch_target = int(form["count"])
-        rating = form["rating"]
-        word_id = form["word_id"]
+        if "count" in form:
+            batch_target = int(form["count"])
+        else:
+            batch_target = None
+        rating = int(form["rating"])
+        word_id = int(form["word_id"])
         response_slot = (await dbsess.execute(
             select(ResponseSlot)
             .filter_by(
@@ -268,8 +360,7 @@ async def selfassess():
     )).scalars().first()
     if next_word is None:
         # Done
-        user.selfassess_finish_date = datetime.datetime.now()
-        await dbsess.commit()
+        await finalise_selfassess(user)
         await flash(
             "Self assessment finished. "
             "Well done! Now proceed to the mini-exam."
@@ -290,6 +381,71 @@ async def selfassess():
     )
 
 
+@app.route("/miniexam", methods=['GET', 'POST'])
+@user_required
+async def miniexam():
+    user = await current_user
+    if request.method == 'POST':
+        form = await request.form
+        zipped = zip(
+            form.getlist("word_id", type=int),
+            form.getlist("defn_type"),
+            form.getlist("response"),
+        )
+        for word_id, defn_type, response in zipped:
+            miniexam_slot = (await dbsess.execute(
+                select(MiniexamSlot).where(
+                    MiniexamSlot.participant_id == user.id,
+                    MiniexamSlot.word_id == word_id,
+                )
+            )).scalars().first()
+            if defn_type.endswith("_ru"):
+                response_lang = MiniexamResponseLanguage.ru
+            elif defn_type.endswith("_en"):
+                response_lang = MiniexamResponseLanguage.en
+            elif defn_type.endswith("_hu"):
+                response_lang = MiniexamResponseLanguage.hu
+            else:
+                response_lang = None
+            if defn_type.startswith("definition_"):
+                response_type = MiniexamResponseType.trans_defn
+            elif defn_type.startswith("topic_"):
+                response_type = MiniexamResponseType.topic
+            else:
+                response_type = MiniexamResponseType.donotknow
+            dbsess.add(MiniexamResponse(
+                miniexam_slot_id=miniexam_slot.id,
+                timestamp=datetime.datetime.now(),
+                response_lang=response_lang,
+                response_type=response_type,
+                response=(
+                    response
+                    if response_type != MiniexamResponseType.donotknow
+                    else ""
+                ),
+            ))
+        user.miniexam_finish_date = datetime.datetime.now()
+        await dbsess.commit()
+        await flash(
+            "Thanks for completing the mini-exam. "
+            "You're all done. "
+            "We'll be in contact when all participants have finished."
+        )
+        return redirect(url_for("overview"))
+    else:
+        words = (await dbsess.execute(
+            select(Word).join(MiniexamSlot).where(
+                MiniexamSlot.participant_id == user.id
+            ).order_by(
+                MiniexamSlot.miniexam_order
+            )
+        )).scalars()
+        return await render_template(
+            "miniexam.html",
+            words=words
+        )
+
+
 @app.route('/track', methods=['POST'])
 @user_required
 async def track():
@@ -298,7 +454,11 @@ async def track():
     if event == "selfassesswindowfocus":
         event_type = SessionEvent.selfassess_focus
     elif event == "selfassesswindowblur":
-        event_type = SessionEvent.selfassess_unfocus
+        event_type = SessionEvent.selfassess_blur
+    elif event == "miniexamwindowfocus":
+        event_type = SessionEvent.miniexam_focus
+    elif event == "miniexamwindowblur":
+        event_type = SessionEvent.miniexam_blur
     else:
         abort(404)
     await add_event(event_type)

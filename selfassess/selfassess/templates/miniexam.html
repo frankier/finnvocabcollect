@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block body %}
+<input
+    type="hidden"
+    name="event"
+    value="miniexamwindowfocus"
+    hx-post="{{ url_for("track") }}"
+    hx-trigger="focus from:window">
+<input
+    type="hidden"
+    name="event"
+    value="miniexamwindowblur"
+    hx-post="{{ url_for("track") }}"
+    hx-trigger="blur from:window">
+<form
+     method="post"
+     class="ma5 mt0 mw7 center"
+     action="{{ url_for("miniexam") }}"
+>
+    <div class="f4 lh-copy">
+        <p class="f3">
+            Please demonstrate your knowledge of the following words.
+        </p>
+        <ul>
+            <li>
+                Try to translate or define the word in your own language, English or Finnish &mdash; in that order of preference;
+            </li>
+            <li>
+                If you cannot do this, instead give your best guess of the topic of the word i.e. completing the sentence "this word has something to do with&mldr;";
+            </li>
+            <li>
+                If you are absolutely unable to attempt any of the others then you may select that that you do not know the word;
+            </li>
+            <li>
+                Make sure to pick the correct option for the type of answer you provide!
+            </li>
+        </ul>
+    </div>
+    <ul class="list" style="column-count: 2;">
+        {% for word in words %}
+            <li class="pa4">
+                <div class="tc f3 mb1">{{ word.word }}</div>
+                <input type="hidden" name="word_id" value="{{ word.id }}">
+                <select class="mv1" name="defn_type"
+                _="
+                on change or load
+                set the disabled of #text_{{ word.id}} to (my value is 'donotknow')
+                then set the required of #text_{{ word.id}} to (my value is not 'donotknow')
+                ">
+                    <option value="definition_ru">Russian translation</option>
+                    <option value="definition_en">English translation</option>
+                    <option value="definition_fi">Finnish translation</option>
+                    <option value="topic_ru">Russian topic</option>
+                    <option value="topic_en">English topic</option>
+                    <option value="topic_fi">Finnish topic</option>
+                    <option value="donotknow">Do not know</option>
+                </select> 
+                <input class="mt1 w-100" id="text_{{ word.id }}" name="response" required>
+            </li>
+        {% endfor %}
+    </ul>
+    <button type="submit" class="pa2 ma1 f1 center db">Submit</button>
+</form>
+{% endblock %}

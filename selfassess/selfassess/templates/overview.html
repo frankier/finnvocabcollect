@@ -63,7 +63,7 @@
                 class="o-40"
             {% endif %}
         >
-            {% if selfassess == "complete" %}
+            {% if selfassess == "accepted" %}
                 {{ box("tick") }}
             {% elif selfassess == "pending" %}
                 {{ box("dash") }}
@@ -72,7 +72,7 @@
             {% endif %}
             Complete the self-assessment
             <ul class="ml6">
-                {% if language_proof != "none" and accepted %}
+                {% if selfassess == "none" and language_proof != "none" and accepted %}
                     <li>
                         <a href="{{ url_for("selfassess") }}">
                             Continuous mode
@@ -112,19 +112,43 @@
         </li>
 
         <li
-            {% if selfassess != "pending" or selfassess != "complete" %}
+            {% if selfassess == "none" %}
                 class="o-40"
             {% endif %}
-        >{{ box("cross") }} Complete the mini-exam
+        >
+            {% if miniexam == "accepted" %}
+                {{ box("tick") }}
+            {% elif miniexam == "pending" %}
+                {{ box("dash") }}
+            {% else %}
+                {{ box("cross") }}
+            {% endif %}
+            {% if selfassess != "none" %}
+                <a href="{{ url_for("miniexam") }}">
+            {% endif %}
+            Complete the mini-exam
+            {% if selfassess != "none" %}
+                </a>
+            {% endif %}
             <ul class="ml6">
-                <li>
-                    Once you have finished the self-assessment.
-                </li>
+                {% if selfassess == "none" %}
+                    <li>
+                        Once you have finished the self-assessment, there is a short mini-exam.
+                    </li>
+                {% elif miniexam == "none" %}
+                    <li>
+                        Complete the mini-exam in a single session. It should take no longer than 30 minutes.
+                    </li>
+                {% elif miniexam == "complete" %}
+                    <li>Approved</li>
+                {% elif miniexam == "pending" %}
+                    <li>Awaiting approval</li>
+                {% endif %}
             </ul>
         </li>
 
         <li
-            {% if miniexam != "complete" %}
+            {% if miniexam == "none" %}
                 class="o-40"
             {% endif %}
         >{{ box("cross") }} Get paid
