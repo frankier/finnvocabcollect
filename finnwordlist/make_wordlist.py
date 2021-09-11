@@ -87,7 +87,7 @@ def iter_value_columns():
             yield prefix + corpus
 
 
-def redistribute_compound_weights(df, current_wordlist, coverages):
+def redistribute_compound_weights(df, current_wordlist):
     compos_df = pandas.read_parquet("compositionality.parquet")
     rm_lemmas = []
     highly_compositional_df = compos_df[compos_df["compositionality"] >= 0.9]
@@ -135,15 +135,10 @@ def redistribute_compound_weights(df, current_wordlist, coverages):
                 col_loc = df.columns.get_loc(value_col)
                 df.iat[df_part_idx, col_loc] += \
                     df.iat[df_lemma_idx, col_loc] / len(found_parts)
-            if part in current_wordlist:
-                for corpus in CORPORA:
-                    col_loc = df.columns.get_loc(ABS_FREQ_PREFIX + corpus)
-                    coverages[corpus] += \
-                        df.iat[df_lemma_idx, col_loc] / len(found_parts)
     return df[~df["lemma"].isin(rm_lemmas)]
 
 
-def drop_compositional_derivations(df, current_wordlist, coverages):
+def drop_compositional_derivations(df, current_wordlist):
     lemma_col_idx = df.columns.get_loc("lemma")
     deriv_df = pandas.read_parquet("deriv.parquet")
     rm_lemmas = []
@@ -165,10 +160,6 @@ def drop_compositional_derivations(df, current_wordlist, coverages):
             for value_col in iter_value_columns():
                 col_loc = df.columns.get_loc(value_col)
                 df.iat[head_idx, col_loc] += df.iat[deriv_idx, col_loc] / len(found_heads)
-            if head in current_wordlist:
-                for corpus in CORPORA:
-                    col_loc = df.columns.get_loc(ABS_FREQ_PREFIX + corpus)
-                    coverages[corpus] += df.iat[deriv_idx, col_loc] / len(found_heads)
         rm_lemmas.append(row["derivs"])
     print("Removed", len(rm_lemmas))
     return df[~df["lemma"].isin(rm_lemmas)]
@@ -188,6 +179,13 @@ def merge_duplicates(df):
         last = lemma
         last_idx = idx
     return df[keep]
+
+
+def recalculate_coverages(freqs_df, current_wordlist):
+    coverages = {}
+    for corpus in CORPORA:
+        coverages[corpus] = freqs_df[ABS_FREQ_PREFIX + corpus][freqs_df["lemma"].isin(current_wordlist)].sum()
+    return coverages
 
 
 @click.command()
@@ -231,7 +229,7 @@ def main(vectors, inf, outf):
     print("Totals")
     pprint(totals)
     print("Dropping compositional derivations")
-    freqs_df = drop_compositional_derivations(freqs_df, current_wordlist, coverages)
+    freqs_df = drop_compositional_derivations(freqs_df, current_wordlist)
     print("Have", len(freqs_df), "left")
     print_coverages()
     print()
@@ -241,11 +239,13 @@ def main(vectors, inf, outf):
     pprint(get_totals(freqs_df))
 
     print("Trimming compounds")
-    freqs_df = redistribute_compound_weights(freqs_df, current_wordlist, coverages)
+    freqs_df = redistribute_compound_weights(freqs_df, current_wordlist)
 
     print("Totals after trimming compounds")
     pprint(totals)
     pprint(get_totals(freqs_df))
+
+    coverages = recalculate_coverages(freqs_df, current_wordlist)
 
     print("Coverages after trimming derivations and compounds")
     print_coverages()
@@ -262,12 +262,6 @@ def main(vectors, inf, outf):
     print(len(current_wordlist))
     print("Coverages")
     print_coverages()
-    print("Recalculated")
-    for corpus in CORPORA:
-        cov = freqs_df[ABS_FREQ_PREFIX + corpus][freqs_df["lemma"].isin(current_wordlist)].sum()
-        print(cov, coverages[corpus])
-        print(corpus, cov / totals[corpus] * 100)
-    
 
     freqs_df = freqs_df[freqs_df["lemma"].isin(current_wordlist)]
     freqs_df.drop(columns=["pos"], inplace=True)
