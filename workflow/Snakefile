@@ -1,10 +1,22 @@
 from os.path import join as pjoin
 
 
+WIKIPARSE_DB = config["WIKIPARSE_DB"]
+SVL12K_ENRICHED_PATH = config["SVL12K_ENRICHED_PATH"]
+KAIKKI_FI = "kaikki.org-dictionary-Finnish.json"
+
+
 rule all:
     input:
-        "wordlist.csv",
+        "wordlist.parquet",
         "wordlist.txt"
+
+
+rule download_kaikki:
+    output:
+        KAIKKI_FI
+    shell:
+        "wget -O {output} https://kaikki.org/dictionary/Finnish/kaikki.org-dictionary-Finnish.json"
 
 
 rule download_numberbatch:
@@ -23,40 +35,79 @@ rule select_language:
         r"gzip -d < {input} | sed -n -e 's/^\/c\/{wildcards.lang}\///gp' > {output}"
 
 
-rule make_compound_list:
+rule convert_numberbatch:
     input:
-        config["WIKIPARSE_DB"]
+        "numberbatch-fi.txt"
     output:
-        "compound_list.txt"
+        "numberbatch_fi.vec",
     shell:
-        "sqlite3 {input} < make_compound_list.sql > {output}"
+        "python -m finnwordlist.preproc.convert_numberbatch {input} {output}"
 
 
-rule figure_skating:
+rule clean_convert:
     input:
         "lemma_freqs.csv"
     output:
-        "freqs.parquet"
+        "lemma_freqs.parquet"
     shell:
-        "python figure_skating.py"
+        "python -m finnwordlist.preproc.clean_convert_df {input} {output}"
+
+
+rule make_ordinal_blacklist:
+    input:
+        KAIKKI_FI
+    output:
+        "badcatlist.txt"
+    shell:
+        "python -m finnwordlist.ordinal_blacklist {input} {output}"
+
+
+rule make_suffix_list:
+    input:
+        WIKIPARSE_DB 
+    output:
+        "suffixes.parquet"
+    shell:
+        "python -m finnwordlist.deriv.suffix {input} {output}"
+
+
+rule make_compound_compositionality:
+    input:
+        WIKIPARSE_DB 
+    output:
+        "compound_compositionality.parquet"
+    shell:
+        "python -m finnwordlist.deriv.compound_compositionality {input} {output}"
 
 
 rule make_wordlist:
     input:
-        "kotus-sanalista_v1/kotus-sanalista_v1.xml",
-        "compound_list.txt",
-        "freqs.parquet"
+        badcatlist = "badcatlist.txt",
+        suffixes = "suffixes.parquet",
+        compound_compositionality = "compound_compositionality.parquet",
+        kotus = "kotus-sanalista_v1/kotus-sanalista_v1.xml",
+        numberbatch_fi = "numberbatch_fi.vec",
+        lemma_freqs = "lemma_freqs.parquet"
     output:
-        wordlist = "wordlist.csv",
-        dropped = directory("dropped")
+        wordlist = "wordlist.parquet"
     shell:
-        "python make_wordlist.py --intermediates-out {output.dropped} --filter nss-no-compound --drop-dupes --drop-reg-der --output-fmt csv > {output.wordlist}"
+        "python -m finnwordlist.make_wordlist "
+        "{input.numberbatch_fi} {input.lemma_freqs} {output.wordlist}"
 
 
 rule convert_wordlist_to_bare:
     input:
-        "wordlist.csv"
+        "wordlist.parquet"
     output:
         "wordlist.txt"
     shell:
-        "python convert_wordlist_to_bare.py < {input} > {output}"
+        "python -m finnwordlist.convert_wordlist_to_bare {input} {output}"
+
+
+rule plot_en_wordlist_freqs:
+    input:
+        SVL12K_ENRICHED_PATH 
+    output:
+        "en_freq_hist.svg"
+    shell:
+        "python -m plot_en_wordlist_freqs {input} {output}"
