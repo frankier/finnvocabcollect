@@ -7,12 +7,16 @@ authors = ["Frankie Robertson <frankie@robertson.name>"]
 [tool.poetry.dependencies]
 python = "^3.9"
 pandas = "^1.2.3"
-click = "^7.1.2"
+click = "^8.0.0"
 lxml = "^4.6.2"
-pyarrow = "^3.0.0"
+pyarrow = "^4.0.0"
 snakemake = "^6.0.4"
 langcodes = {version = "^3.1.0", extras = ["data"]}
 nltk = "^3.6.2"
+gensim = "^4.1.0"
+seaborn = "^0.11.2"
+finntk = "^0.0.73"
+vocabaqdata = {git = "https://github.com/frankier/vocabaqdata", rev = "main"}
 
 [tool.poetry.dev-dependencies]
 

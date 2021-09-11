@@ -1,7 +1,26 @@
+from os.path import join as pjoin
+
+
 rule all:
     input:
         "wordlist.csv",
         "wordlist.txt"
+
+
+rule download_numberbatch:
+    output:
+        "numberbatch-19.08.txt.gz"
+    shell:
+        "wget -O {output} https://conceptnet.s3.amazonaws.com/downloads/2019/numberbatch/numberbatch-19.08.txt.gz"
+
+
+rule select_language:
+    input:
+        "numberbatch-19.08.txt.gz"
+    output:
+        "numberbatch-{lang}.txt"
+    shell:
+        r"gzip -d < {input} | sed -n -e 's/^\/c\/{wildcards.lang}\///gp' > {output}"
 
 
 rule make_compound_list:
