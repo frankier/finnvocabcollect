@@ -1,8 +1,7 @@
 import seaborn
 import pandas
 import click
-from wordfreq import cB_to_zipf
-from vocabaqdata.feats.freq import get_word_buckets
+from wordfreq import cB_to_zipf, get_frequency_list
 import matplotlib.pyplot as plt
 
 
@@ -12,9 +11,10 @@ import matplotlib.pyplot as plt
 def main(inf, figout):
     df = pandas.read_parquet(inf)
     wordfreq_zipfs = []
-    for word, idx in get_word_buckets():
-        zipf = cB_to_zipf(-idx)
-        wordfreq_zipfs.append(zipf)
+    for idx, bucket in enumerate(get_frequency_list("en")):
+        for word in bucket:
+            zipf = cB_to_zipf(-idx)
+            wordfreq_zipfs.append(zipf)
     svl12k_zipf = df[df["respondent"] == 1]["zipf"]
     print(len(svl12k_zipf))
     print(len(wordfreq_zipfs))
