@@ -4,11 +4,7 @@ import matplotlib.pyplot as plt
 import pandas
 import numpy as np
 import scipy.stats as stats
-
-
-def kde_mode(kernel, values):
-    height = kernel.pdf(values)
-    return values[np.argmax(height)]
+from finnwordlist.utils.stats import kde_mode
 
 
 @click.command()

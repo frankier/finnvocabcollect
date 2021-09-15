@@ -9,6 +9,7 @@ CORPORA = [
 
 REL_FREQ_PREFIX = "relative_freq_"
 ABS_FREQ_PREFIX = "abs_freq_"
+REL_FREQ_COLS = [REL_FREQ_PREFIX + corpus for corpus in CORPORA]
 
 
 def get_totals(freqs_df):

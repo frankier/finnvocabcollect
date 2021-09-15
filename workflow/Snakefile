@@ -4,6 +4,7 @@ from os.path import join as pjoin
 WIKIPARSE_DB = config["WIKIPARSE_DB"]
 SVL12K_ENRICHED_PATH = config["SVL12K_ENRICHED_PATH"]
 KAIKKI_FI = "kaikki.org-dictionary-Finnish.json"
+KAIKKI_EN = "kaikki.org-dictionary-English-all-non-inflected-senses.json"
 
 
 rule all:
@@ -12,11 +13,18 @@ rule all:
         "wordlist.txt"
 
 
-rule download_kaikki:
+rule download_kaikki_fi:
     output:
         KAIKKI_FI
     shell:
         "wget -O {output} https://kaikki.org/dictionary/Finnish/kaikki.org-dictionary-Finnish.json"
+
+
+rule download_kaikki_en:
+    output:
+        KAIKKI_EN
+    shell:
+        "wget -O {output} https://kaikki.org/dictionary/English/all-non-inflected-senses/kaikki.org-dictionary-English-all-non-inflected-senses.json"
 
 
 rule download_numberbatch:
@@ -73,11 +81,34 @@ rule make_suffix_list:
 
 rule make_compound_compositionality:
     input:
-        WIKIPARSE_DB 
+        defns = WIKIPARSE_DB,
+        vectors = "numberbatch_fi.vec"
     output:
         "compound_compositionality.parquet"
     shell:
-        "python -m finnwordlist.deriv.compound_compositionality {input} {output}"
+        "python -m finnwordlist.deriv.compound_compositionality {input.defns} {input.vectors} {output}"
+
+
+rule make_loans:
+    input:
+        defns = WIKIPARSE_DB,
+        en_kaikki = KAIKKI_EN,
+        fi_kaikki = KAIKKI_FI
+    output:
+        "loans.parquet"
+    shell:
+        "python -m finnwordlist.loan {input.defns} {input.en_kaikki} {input.fi_kaikki} {output}"
+
+
+rule make_full_wordlist:
+    input:
+        clean_df = "lemma_freqs.parquet",
+        kotus = "kotus-sanalista_v1/kotus-sanalista_v1.xml"
+    output:
+        wordlist_full = "wordlist_full.parquet"
+    shell:
+        "python -m finnwordlist.make_wordlist "
+        "{input.clean_df} {output.wordlist_full}"
 
 
 rule make_wordlist:
@@ -85,14 +116,14 @@ rule make_wordlist:
         badcatlist = "badcatlist.txt",
         suffixes = "suffixes.parquet",
         compound_compositionality = "compound_compositionality.parquet",
-        kotus = "kotus-sanalista_v1/kotus-sanalista_v1.xml",
-        numberbatch_fi = "numberbatch_fi.vec",
-        lemma_freqs = "lemma_freqs.parquet"
+        loans = "loans.parquet",
+        wordlist_full = "wordlist_full.parquet",
+        wordlist_derivtrim = "wordlist_derivtrim.parquet"
     output:
         wordlist = "wordlist.parquet"
     shell:
         "python -m finnwordlist.make_wordlist "
-        "{input.numberbatch_fi} {input.lemma_freqs} {output.wordlist}"
+        "{input.wordlist_full} {input.wordlist_derivtrim} {output.wordlist}"
 
 
 rule convert_wordlist_to_bare:

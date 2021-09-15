@@ -8,7 +8,9 @@ from finnwordlist.multicorpusfreqs import iter_value_columns
 def redistribute_compound_weights(df):
     compos_df = pandas.read_parquet("compound_compositionality.parquet")
     rm_lemmas = []
-    highly_compositional_df = compos_df[compos_df["compositionality"] >= 0.9]
+    highly_compositional_df = compos_df[
+        (compos_df["compositionality"] >= 0.9)
+    ]
     rm_lemmas.extend(highly_compositional_df["compound"])
     num_non_compositional = (compos_df["compositionality"] < 0.7).sum()
     mid_range = compos_df[
@@ -26,6 +28,11 @@ def redistribute_compound_weights(df):
             rm_lemmas.remove(row["compound"])
             if num_mid_range_kept >= num_non_compositional:
                 break
+    for lemma in df["lemma"]:
+        if "-" not in lemma:
+            continue
+        if lemma not in rm_lemmas:
+            rm_lemmas.append(lemma)
     print("Removed", len(rm_lemmas))
     compound_col_idx = compos_df.columns.get_loc("compound")
     parts_col_idx = compos_df.columns.get_loc("parts")
@@ -58,38 +65,45 @@ def redistribute_compound_weights(df):
     return df[~df["lemma"].isin(rm_lemmas)]
 
 
-def drop_compositional_derivations(df):
+def drop_generic(df, drop_df, head_col, bits_col):
     lemma_col_idx = df.columns.get_loc("lemma")
-    deriv_df = pandas.read_parquet("suffixes.parquet")
     rm_lemmas = []
     # We want to go long first so they redistribute their weights up the derivation tree
-    deriv_df.sort_values(
-        by="derivs",
+    drop_df.sort_values(
+        by=head_col,
         ascending=False,
         inplace=True,
         key=lambda series: series.str.len()
     )
-    for _, row in deriv_df.iterrows():
-        deriv = row["derivs"]
-        deriv_idx = df["lemma"].searchsorted(deriv)
-        if df.iat[deriv_idx, lemma_col_idx] != deriv:
-            print("Couldn't find derived term", deriv, file=sys.stderr)
+    for _, row in drop_df.iterrows():
+        head = row[head_col]
+        head_idx = df["lemma"].searchsorted(head)
+        if head_idx >= len(df) or df.iat[head_idx, lemma_col_idx] != head:
+            print(f"Couldn't find head term ({head_col}): {head}", file=sys.stderr)
             continue
-        heads = row["heads"]
-        found_heads = []
-        for head in heads:
-            head_idx = df["lemma"].searchsorted(head)
-            if df.iat[head_idx, lemma_col_idx] != head:
-                print("Couldn't find head of derived term", head, file=sys.stderr)
+        bits = row[bits_col]
+        found_bits = []
+        for bit in bits:
+            bit_idx = df["lemma"].searchsorted(bit)
+            if df.iat[bit_idx, lemma_col_idx] != bit:
+                print(f"Couldn't find bit term ({bits_col}): {bit}", file=sys.stderr)
                 continue
-            found_heads.append((head_idx, head))
-        for head_idx, head in found_heads:
+            found_bits.append((bit_idx, bit))
+        for bit_idx, bit in found_bits:
             for value_col in iter_value_columns():
                 col_loc = df.columns.get_loc(value_col)
-                df.iat[head_idx, col_loc] += df.iat[deriv_idx, col_loc] / len(found_heads)
-        rm_lemmas.append(row["derivs"])
-    print("Removed", len(rm_lemmas))
+                df.iat[bit_idx, col_loc] += df.iat[head_idx, col_loc] / len(found_bits)
+        rm_lemmas.append(row[head_col])
+    print("Removed", len(rm_lemmas), head_col)
     return df[~df["lemma"].isin(rm_lemmas)]
+
+
+def drop_loans(df):
+    return drop_generic(df, pandas.read_parquet("loans.parquet"), "words", "non_loan_bits")
+
+
+def drop_compositional_derivations(df):
+    return drop_generic(df, pandas.read_parquet("suffixes.parquet"), "derivs", "heads")
 
 
 def merge_duplicates(df):
@@ -108,5 +122,14 @@ def merge_duplicates(df):
     return df[keep]
 
 
+def drop_dash(df):
+    keep = np.full(len(df), True)
+    for idx, (_, row) in enumerate(df.iterrows()):
+        lemma = row["lemma"]
+        if lemma.startswith("-") or lemma.endswith("-"):
+            keep[idx] = False
+    return df[keep]
+
+
 def drop_derivations_tradeoff(df):
-    return redistribute_compound_weights(drop_compositional_derivations(df))
+    return redistribute_compound_weights(drop_compositional_derivations(drop_loans(drop_dash(df))))
