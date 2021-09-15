@@ -1,3 +1,4 @@
+import click
 import pandas
 import langcodes
 from nltk.tokenize import word_tokenize
@@ -28,18 +29,11 @@ SHORT_COLS = [
     "otherproof"
 ]
 
-df = pandas.read_csv("interest.csv")
-df.rename(columns=dict(zip(df.columns, SHORT_COLS)), inplace=True)
-df["selfcefr"] = df["selfcefr"].map(lambda cefr: cefr[:2])
 
-
-def drop(reason, criteron):
-    print("Dropping {} rows because {}.".format(criteron.sum(), reason))
-    print(df[criteron].index)
-    df.drop(df[criteron].index, inplace=True)
-
-
-drop("<B1 CEFR", df["selfcefr"].isin(["A1", "A2"]))
+LANG_FIXES = {
+    "Mandiali": "Mandiali",
+    "Veäjän kieli": "Venäjä",
+}
 
 
 def lang2code(lang):
@@ -50,26 +44,6 @@ def lang2code(lang):
     except LookupError:
         # print("Fail", lang)
         return float("NaN")
-
-
-LANG_FIXES = {
-    "Mandiali": "Mandiali",
-    "Veäjän kieli": "Venäjä",
-}
-
-df["nativelang"] = df["nativelang"].map(lambda l: LANG_FIXES.get(l, l))
-df["nativelangcode"] = df["nativelang"].map(lang2code)
-drop("native language code lookup failed", df["nativelangcode"].isna())
-print(df)
-
-print(df.groupby(["nativelangcode"]).size().reset_index(name="counts"))
-print(df.groupby(["selfcefr"]).size().reset_index(name="counts"))
-print(
-    df
-    .groupby(["nativelangcode", "selfcefr"])
-    .size()
-    .reset_index(name="counts")
-)
 
 
 def has_english(otherlang):
@@ -87,9 +61,41 @@ def has_english(otherlang):
     return False
 
 
-df["hasenglish"] = (
-    (df["nativelangcode"] == "en") |
-    (df["otherlang"].map(has_english))
-)
-print(df.groupby(["hasenglish"]).size().reset_index(name="counts"))
-print(df[~df["hasenglish"]])
+@click.command()
+@click.argument("inf")
+def main(inf):
+    df = pandas.read_csv(inf)
+    df.rename(columns=dict(zip(df.columns, SHORT_COLS)), inplace=True)
+    df["selfcefr"] = df["selfcefr"].map(lambda cefr: cefr[:2])
+
+    def drop(reason, criteron):
+        print("Dropping {} rows because {}.".format(criteron.sum(), reason))
+        print(df[criteron].index)
+        df.drop(df[criteron].index, inplace=True)
+
+    drop("<B1 CEFR", df["selfcefr"].isin(["A1", "A2"]))
+
+    df["nativelang"] = df["nativelang"].map(lambda l: LANG_FIXES.get(l, l))
+    df["nativelangcode"] = df["nativelang"].map(lang2code)
+    drop("native language code lookup failed", df["nativelangcode"].isna())
+    print(df)
+
+    print(df.groupby(["nativelangcode"]).size().reset_index(name="counts"))
+    print(df.groupby(["selfcefr"]).size().reset_index(name="counts"))
+    print(
+        df
+        .groupby(["nativelangcode", "selfcefr"])
+        .size()
+        .reset_index(name="counts")
+    )
+
+    df["hasenglish"] = (
+        (df["nativelangcode"] == "en") |
+        (df["otherlang"].map(has_english))
+    )
+    print(df.groupby(["hasenglish"]).size().reset_index(name="counts"))
+    print(df[~df["hasenglish"]])
+
+
+if __name__ == "__main__":
+    main()
