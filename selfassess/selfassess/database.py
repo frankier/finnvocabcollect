@@ -34,6 +34,21 @@ class Participant(Base):
         "SessionLogEntry",
         back_populates="participant"
     )
+    languages = relationship(
+        "ParticipantLanguage",
+        back_populates="participant"
+    )
+
+
+class ParticipantLanguage(Base):
+    __tablename__ = "participant_language"
+
+    id = Column(Integer, primary_key=True)
+    participant_id = Column(Integer, ForeignKey('participant.id'), nullable=False)
+    language = Column(String, nullable=False)
+    level = Column(String, nullable=False)
+
+    participant = relationship("Participant", back_populates="languages")
 
 
 class Word(Base):
@@ -41,6 +56,9 @@ class Word(Base):
 
     id = Column(Integer, primary_key=True)
     word = Column(String, unique=True, nullable=False)
+
+    response_slots = relationship("ResponseSlot", back_populates="word")
+    miniexam_slots = relationship("MiniexamSlot", back_populates="word")
 
 
 class ResponseSlot(Base):
@@ -54,6 +72,7 @@ class ResponseSlot(Base):
     participant = relationship("Participant", back_populates="response_slots")
     responses = relationship("Response", back_populates="slot")
     presentations = relationship("Presentation", back_populates="slot")
+    word = relationship("Word", back_populates="response_slots")
 
 
 class Response(Base):
@@ -65,6 +84,9 @@ class Response(Base):
     rating = Column(Integer)
 
     slot = relationship("ResponseSlot", back_populates="responses")
+
+    def __repr__(self):
+        return f"<Response @{self.timestamp!r}>"
 
 
 class Presentation(Base):
@@ -86,6 +108,7 @@ class MiniexamSlot(Base):
 
     participant = relationship("Participant", back_populates="miniexam_slots")
     responses = relationship("MiniexamResponse", back_populates="slot")
+    word = relationship("Word", back_populates="miniexam_slots")
 
 
 class MiniexamResponseLanguage(enum.Enum):
@@ -127,6 +150,7 @@ class SessionLogEntry(Base):
 
     id = Column(Integer, primary_key=True)
     participant_id = Column(Integer, ForeignKey('participant.id'), nullable=False)
+    timestamp = Column(DateTime)
     type = Column(Enum(SessionEvent))
     payload = Column(JSON)
 

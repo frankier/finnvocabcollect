@@ -26,8 +26,9 @@ from .database import (
 )
 from sqlalchemy import select
 from sqlalchemy import func
-from sqlalchemy.orm import contains_eager, scoped_session, joinedload, aliased
+from sqlalchemy.orm import scoped_session
 from .utils import get_async_session
+from .queries import recent_responses_for_participant
 import random
 
 app = Quart(__name__)
@@ -47,6 +48,7 @@ dbsess = scoped_session(
 async def add_event(event_type):
     dbsess.add(SessionLogEntry(
         type=event_type,
+        timestamp=datetime.datetime.now(),
         payload=orjson.dumps({
             "remote_addr": request.remote_addr,
             "user_agent": request.headers.get('User-Agent'),
@@ -241,26 +243,9 @@ async def ajax_redirect(url):
         return redirect(url)
 
 
-def recent_responses():
-    subq = select(
-        Response,
-        func.row_number().over(
-            partition_by=Response.response_slot_id,
-            order_by=Response.timestamp
-        ).label("rownb")
-    )
-    subq = subq.subquery(name="subq")
-    aliased_responses = aliased(Response, alias=subq)
-    return (
-        select(aliased_responses)
-        .options(joinedload(aliased_responses.slot))
-        .filter(subq.c.rownb == 1)
-    )
-
-
-async def get_miniexam_questions():
+async def get_miniexam_questions(user):
     grouped = {}
-    for response, in (await dbsess.execute(recent_responses())):
+    for response, in (await dbsess.execute(recent_responses_for_participant(user))):
         print("response")
         print(response)
         print(response.slot)
@@ -293,7 +278,7 @@ MINIEXAM_QUESTIONS_PER_RATING = 20
 
 async def finalise_selfassess(user):
     user.selfassess_finish_date = datetime.datetime.now()
-    for idx, word_id in enumerate((await get_miniexam_questions())):
+    for idx, word_id in enumerate((await get_miniexam_questions(user))):
         dbsess.add(MiniexamSlot(
             miniexam_order=idx,
             participant=user,
@@ -462,6 +447,7 @@ async def track():
     else:
         abort(404)
     await add_event(event_type)
+    await dbsess.commit()
     return "yep"
 
 
