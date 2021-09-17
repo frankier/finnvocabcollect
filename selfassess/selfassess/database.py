@@ -28,8 +28,16 @@ class Participant(Base):
     miniexam_accept_date = Column(DateTime)
     next_response = Column(Integer, default=0)
 
-    response_slots = relationship("ResponseSlot", back_populates="participant", order_by="ResponseSlot.response_order")
-    miniexam_slots = relationship("MiniexamSlot", back_populates="participant", order_by="ResponseSlot.miniexam_order")
+    response_slots = relationship(
+        "ResponseSlot",
+        back_populates="participant",
+        order_by="ResponseSlot.response_order"
+    )
+    miniexam_slots = relationship(
+        "MiniexamSlot",
+        back_populates="participant",
+        order_by="MiniexamSlot.miniexam_order"
+    )
     session_log_entries = relationship(
         "SessionLogEntry",
         back_populates="participant"
