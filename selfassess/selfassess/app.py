@@ -14,6 +14,7 @@ from quart.templating import render_template
 from werkzeug.local import LocalProxy
 from .database import (
     Participant,
+    Presentation,
     Word,
     ResponseSlot,
     Response,
@@ -358,6 +359,13 @@ async def selfassess():
         template = "selfassess_ajax.html"
     else:
         template = "selfassess.html"
+    dbsess.add(
+        Presentation(
+            response_slot_id=response_slot.id,
+            timestamp=datetime.datetime.now()
+        )
+    )
+    await dbsess.commit()
     return await render_template(
         template,
         word=next_word.word,
