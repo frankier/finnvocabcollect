@@ -291,6 +291,9 @@ async def finalise_selfassess(user):
 @user_required
 async def selfassess():
     user = await current_user
+    if user.selfassess_start_date is None:
+        user.selfassess_start_date = datetime.datetime.now()
+        await dbsess.commit()
     total_words = await get_total_words()
     cur_word_idx = user.next_response
     if request.method == 'POST':
@@ -370,6 +373,9 @@ async def selfassess():
 @user_required
 async def miniexam():
     user = await current_user
+    if user.miniexam_start_date is None:
+        user.miniexam_start_date = datetime.datetime.now()
+        await dbsess.commit()
     if request.method == 'POST':
         form = await request.form
         zipped = zip(
