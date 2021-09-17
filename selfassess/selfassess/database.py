@@ -132,6 +132,7 @@ class MiniexamResponse(Base):
     response_lang = Column(Enum(MiniexamResponseLanguage), nullable=True)
     response_type = Column(Enum(MiniexamResponseType))
     response = Column(String, nullable=False)
+    mark = Column(Integer)
 
     slot = relationship("MiniexamSlot", back_populates="responses")
 
