@@ -58,6 +58,9 @@ def get_participant_sessions(participant):
         sessions[-1]["device"] = device
         sessions[-1]["last_timestamp"] = last_timestamp
 
+    if not events:
+        return sessions
+
     new_session()
     for timestamp, event in events:
         if (
