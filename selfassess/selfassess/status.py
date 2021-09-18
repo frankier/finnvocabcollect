@@ -24,6 +24,11 @@ def main():
             f"{participant.given_name} {participant.surname} "
             f"({participant.email})"
         )
+        print("Account created: {}; accepted: {}; acceptance deadline: {}".format(
+            participant.create_date,
+            fmt_dt(participant.accept_date),
+            participant.accept_deadline,
+        ))
         print("Proof uploaded: {}; accepted: {}".format(
             fmt_dt(participant.proof_upload_date),
             fmt_dt(participant.proof_accept_date)
@@ -54,10 +59,11 @@ def main():
             total_mins % 60,
             len(sessions)
         ))
-        print("Mini-exam started: {}; finished: {}; accepted: {}".format(
+        print("Mini-exam started: {}; finished: {}; accepted: {}; completion deadline: {}".format(
             fmt_dt(participant.miniexam_start_date),
             fmt_dt(participant.miniexam_finish_date),
-            fmt_dt(participant.miniexam_accept_date)
+            fmt_dt(participant.miniexam_accept_date),
+            participant.complete_deadline,
         ))
         print()
 

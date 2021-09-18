@@ -1,4 +1,4 @@
-from sqlalchemy import Column, DateTime, Enum, ForeignKey, func, Integer, String, JSON
+from sqlalchemy import Column, Date, DateTime, Enum, ForeignKey, func, Integer, String, JSON
 from sqlalchemy.orm import declarative_base, relationship
 import enum
 
@@ -13,6 +13,7 @@ class Participant(Base):
     token = Column(String, nullable=False)
     create_date = Column(DateTime, nullable=False)
     accept_date = Column(DateTime)
+    accept_deadline = Column(Date, nullable=False)
     withdraw_date = Column(DateTime)
     email = Column(String, unique=True, nullable=False)
     given_name = Column(String)
@@ -26,6 +27,7 @@ class Participant(Base):
     miniexam_start_date = Column(DateTime)
     miniexam_finish_date = Column(DateTime)
     miniexam_accept_date = Column(DateTime)
+    complete_deadline = Column(Date, nullable=False)
     next_response = Column(Integer, default=0)
 
     response_slots = relationship(
@@ -75,7 +77,7 @@ class ResponseSlot(Base):
     id = Column(Integer, primary_key=True)
     participant_id = Column(Integer, ForeignKey('participant.id'), nullable=False)
     word_id = Column(Integer, ForeignKey('word.id'), nullable=False)
-    response_order = Column(Integer)
+    response_order = Column(Integer, nullable=False)
 
     participant = relationship("Participant", back_populates="response_slots")
     responses = relationship("Response", back_populates="slot", order_by="Response.timestamp")
@@ -88,8 +90,8 @@ class Response(Base):
 
     id = Column(Integer, primary_key=True)
     response_slot_id = Column(Integer, ForeignKey('response_slot.id'), nullable=False)
-    timestamp = Column(DateTime)
-    rating = Column(Integer)
+    timestamp = Column(DateTime, nullable=False)
+    rating = Column(Integer, nullable=False)
 
     slot = relationship("ResponseSlot", back_populates="responses")
 
@@ -101,7 +103,7 @@ class Presentation(Base):
     __tablename__ = "presentation"
     id = Column(Integer, primary_key=True)
     response_slot_id = Column(Integer, ForeignKey('response_slot.id'), nullable=False)
-    timestamp = Column(DateTime)
+    timestamp = Column(DateTime, nullable=False)
 
     slot = relationship("ResponseSlot", back_populates="presentations")
 
@@ -112,7 +114,7 @@ class MiniexamSlot(Base):
     id = Column(Integer, primary_key=True)
     participant_id = Column(Integer, ForeignKey('participant.id'), nullable=False)
     word_id = Column(Integer, ForeignKey('word.id'), nullable=False)
-    miniexam_order = Column(Integer)
+    miniexam_order = Column(Integer, nullable=False)
 
     participant = relationship("Participant", back_populates="miniexam_slots")
     responses = relationship("MiniexamResponse", back_populates="slot", order_by="MiniexamResponse.timestamp")
@@ -136,9 +138,9 @@ class MiniexamResponse(Base):
 
     id = Column(Integer, primary_key=True)
     miniexam_slot_id = Column(Integer, ForeignKey('miniexam_slot.id'), nullable=False)
-    timestamp = Column(DateTime)
+    timestamp = Column(DateTime, nullable=False)
     response_lang = Column(Enum(MiniexamResponseLanguage), nullable=True)
-    response_type = Column(Enum(MiniexamResponseType))
+    response_type = Column(Enum(MiniexamResponseType), nullable=False)
     response = Column(String, nullable=False)
     mark = Column(Integer)
 
@@ -159,8 +161,8 @@ class SessionLogEntry(Base):
 
     id = Column(Integer, primary_key=True)
     participant_id = Column(Integer, ForeignKey('participant.id'), nullable=False)
-    timestamp = Column(DateTime)
-    type = Column(Enum(SessionEvent))
+    timestamp = Column(DateTime, nullable=False)
+    type = Column(Enum(SessionEvent), nullable=False)
     payload = Column(JSON)
 
     participant = relationship(

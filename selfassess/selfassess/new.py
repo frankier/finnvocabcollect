@@ -80,21 +80,30 @@ def main(email):
     session = get_session()
     token = shortuuid.uuid()
     with session.begin():
+        create_datetime = datetime.datetime.now()
         participant = Participant(
             token=token,
-            create_date=datetime.datetime.now(),
+            create_date=create_datetime,
             accept_date=None,
             email=email,
+            accept_deadline=(
+                create_datetime + datetime.timedelta(weeks=1)
+            ).date(),
+            complete_deadline=(
+                create_datetime + datetime.timedelta(weeks=3)
+            ).date(),
         )
         session.add(participant)
         participant_language = ParticipantLanguage(
-            language=native_lang.alpha2,
+            participant=participant,
+            language=native_lang.language,
             level="native",
         )
         session.add(participant_language)
         for other_lang, cefr in other_langs:
             participant_language = ParticipantLanguage(
-                language=other_lang.alpha2,
+                participant=participant,
+                language=other_lang.language,
                 level=cefr,
             )
             session.add(participant_language)
