@@ -10,3 +10,7 @@ def main(inf, outf):
 
     for lemma in df["lemma"]:
         print(lemma, file=outf)
+
+
+if __name__ == "__main__":
+    main()
