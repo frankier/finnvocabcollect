@@ -69,6 +69,7 @@ def prompts(email):
             return
         elif resp == "y":
             print("Inserting")
+            break
     return native_lang_obj, other_langs
 
 
