@@ -3,6 +3,85 @@
 {% block body %}
 <form method="post" class="ma5 mw7 center f5">
 
+    <section class="lh-copy">
+        <h2>The study</h2>
+
+        <p>
+            The study consists of a self-assessment followed by a mini-exam.
+        </p>
+
+        <p>
+            In the self-assessment, you will self-rate your familiarity with
+            Finnish words on a 5-point scale. In the mini-exam, you will be
+            further tested on your knowledge of a few Finnish words.
+        </p>
+
+        <h2>The self assessment scale</h2>
+
+        <p>
+            The self-assessment scale is 5-point scale explained below:
+        </p>
+
+        <img src="{{ url_for('static', filename='scale_explain.svg') }}">
+
+        <ul>
+            <li>
+                The scale tells two things:
+                <ul>
+                    <li>Whether you think you have seen the word</li>
+                    <li>Whether you think you know the meaning of the word</li>
+                </ul>
+            </li>
+            <li>Point 1 on scale means you have not seen the word</li>
+            <li>Point 3 on the scale means you have seen the word, but do not know the meaning</li>
+            <li>Point 5 on the scale means you know the meaning of the word</li>
+            <li>Points 2 and 4 can be used if you are unsure about which of their neighbours to press</li>
+        </ul>
+
+        <h2>Planning to complete the study in time</h2>
+
+        <p>
+            The self-assessment is estimated to take between 8 and 16 hours, with
+            12 hours being typical. This means you should expect to complete it
+            over more than one day. After this, about 30 minutes should be reserved
+            for the mini-exam.
+        </p>
+
+        <p>
+            Please think about whether you are able to commit to completing
+            this before the deadline shown in the top right before agreeing to
+            participate. Here are two scenarios for how it could be completed:
+        </p>
+
+        <ol>
+            <li>
+                Participant A has two spare days to complete the assessment. On
+                the first day they complete 3 hours of the self assessment in
+                the morning, and then take a break for lunch. They then
+                complete 3 hours in the afternoon. On the second day they do
+                the same, and complete the mini-exam in the evening.
+            </li>
+
+            <li>
+                Participant B is busy during the day Monday to Friday, but has some
+                spare time in the evening and at weekends. They complete 2 hours every
+                evening during Monday to Friday and complete a final 2 hours as well as
+                the mini-exam on Saturday.
+            </li>
+        </ol>
+
+        <p>
+            If you are not able to fit it into your schedule, please withdraw
+            from the study at the bottom of this page.
+        </p>
+
+        <p>
+            Prolonged screen usage can be dangerous for your eyes. Please
+            adjust your screen brightness to match your surroundings and take a
+            10 minute screen break every hour.
+        </p>
+    </section>
+
     <fieldset class="ba b--transparent ph0 mh0">
         <legend class="f4 fw6 ph0 mh0">Conditions</legend>
 
@@ -20,9 +99,9 @@
         <div class="flex items-center ma3">
             <input class="w2 h2 mr3 flex-none" type="checkbox" name="timebox" id="timebox" value="timebox">
             <label for="timebox" class="lh-copy">
-                I understand that I must start the study within a week (168 hours)
-                of receiving the invitation email and complete the study within a
-                week (168 hours) of starting it to be eligible for payment.
+                I understand that I must start the study within a week (7 days)
+                of receiving the invitation email and complete the study within 3
+                weeks (168 hours) of starting it to be eligible for payment.
             </label>
         </div>
 
@@ -51,8 +130,9 @@
             <input class="w2 h2 mr3 flex-none" type="checkbox" name="colldev" id="colldev" value="colldev">
             <label for="colldev" class="lh-copy">
                 I understand that as well as my responses being collected,
-                information about the amount of time I spend answering as well as
-                the type of my device (tablet/phone/computer) is being collected.
+                information about the amount of time I spend answering as well
+                as the type of my device (tablet/phone/computer) is being
+                collected and will be made public.
             </label>
         </div>
 
@@ -60,18 +140,26 @@
             <input class="w2 h2 mr3 flex-none" type="checkbox" name="pubdata" id="pubdata" value="pubdata">
             <label for="pubdata" class="lh-copy">
                 I understand that after removing personally identifying
-                information, the resulting data will be made publicly available. I
-                understand there will be no or only minimal usage restrictions upon
-                this data in order to encourage as much activity beneficial to
-                adult learners of Finnish as possible.
+                information, the resulting data will be made publicly
+                available. I understand there will be no or only minimal usage
+                restrictions upon this data in order to encourage as much
+                activity beneficial to adult learners of Finnish as possible. I
+                consent to the personal the data processing required this but
+                note also that all data processing is done under a public
+                interest basis from the EU GDPR (6.1e) rather than a consent
+                basis. I have <a
+                href="https://tietosuoja.fi/en/what-rights-do-data-subjects-have-in-different-situations">read
+            and understand my rights under the EU GDPR</a>.
             </label>
         </div>
 
         <div class="flex items-center ma3">
             <input class="w2 h2 mr3 flex-none" type="checkbox" name="norevoke" id="norevoke" value="norevoke">
             <label for="norevoke" class="lh-copy">
-                I understand my data in the response set cannot be revoked and as
-                such I promise not to identify my own responses to others.
+                In particular, I understand my de-idenfied data in the response
+                set cannot be revoked (although I still have a legal right to
+                object to the public interest basis) and as such I promise not
+                to identify my own responses to others.
             </label>
         </div>
     </fieldset>
