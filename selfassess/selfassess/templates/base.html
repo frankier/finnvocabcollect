@@ -12,7 +12,13 @@
       <div>
         {% block topbar %}{% endblock %}
       </div>
-      <h3 class="normal ma0 tr">Logged in as <span class="courier">{{ email }}</span><br>Finish by: {{ deadline.strftime('%A %d/%m/%Y') }}</h3>
+      <h3 class="normal ma0 tr">
+        Logged in as <span class="courier">{{ email }}</span><br>
+        {% if accept_deadline %}
+          Start self-assessment by: {{ accept_deadline.strftime('%A %d/%m/%Y') }}<br>
+        {% endif %}
+        Finish by: {{ deadline.strftime('%A %d/%m/%Y') }}
+      </h3>
     </div>
 
     {% with messages = get_flashed_messages() %}

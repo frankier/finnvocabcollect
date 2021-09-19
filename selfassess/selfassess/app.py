@@ -84,11 +84,19 @@ def user_required(func):
 
 
 @app.context_processor
-async def inject_email():
+async def inject_user():
     user = await current_user
     if user is None:
         return {}
-    return dict(email=user.email)
+    if user.selfassess_start_date is None:
+        accept_deadline = user.accept_deadline
+    else:
+        accept_deadline = None
+    return dict(
+        email=user.email,
+        accept_deadline=accept_deadline,
+        deadline=user.complete_deadline
+    )
 
 
 @app.route("/start/<token>")
