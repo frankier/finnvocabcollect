@@ -2,17 +2,36 @@ import click
 import duckdb
 from selfassess.utils import get_session
 from selfassess.database import Participant
+from selfassess.quali import CEFR_SKILLS
 from .utils import get_participant_sessions
+
+
+CEFR_FIELDS = [
+    f"cefr_{type}_{skill}"
+    for type in ("selfassess", "proof")
+    for skill in CEFR_SKILLS
+]
+
+
+PARTICIPANT_TABLE = """
+create table participant (
+    id int primary key,
+    {}
+    proof_age varchar,
+    proof_type varchar
+);
+""".format(
+    "\n".join((f"{field} int," for field in CEFR_FIELDS))
+)
 
 
 def setup_duckdb(db_out):
     conn = duckdb.connect(db_out)
 
     print("Creating tables")
-    conn.execute("""
-    create table participant (
-        id int primary key
-    );
+    conn.execute(
+        PARTICIPANT_TABLE +
+        """
     create table participant_language (
         participant_id int,
         language varchar,
@@ -62,7 +81,21 @@ def main(db_out, which):
             (which == "incomplete" and participant.miniexam_finish_date is not None)
         ):
             continue
-        ddb_conn.execute("insert into participant values (?)", [pid])
+        ddb_conn.execute(
+            "insert into participant values (?, {} ?, ?)".format(
+                "?, " * len(CEFR_FIELDS)
+            ),
+            [
+                pid,
+                *(
+                    getattr(participant, cefr_field)
+                    for cefr_field
+                    in CEFR_FIELDS
+                ),
+                participant.proof_age.name,
+                participant.proof_type.name
+            ]
+        )
         participant_languages = []
         for language in participant.languages:
             participant_languages.append((

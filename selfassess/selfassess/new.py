@@ -4,12 +4,15 @@ from .utils import get_session
 from jinja2 import Template
 from quart import url_for
 import datetime
-from .database import Participant, ParticipantLanguage, Word, ResponseSlot
+from .database import (
+    Participant, ParticipantLanguage, Word, ResponseSlot, ProofAge, ProofType
+)
 from .app import app
 import asyncio
 from sqlalchemy import select
 import random
 import langcodes
+from .quali import CEFR_LEVELS, CEFR_SKILLS
 
 
 EMAIL_TEMPLATE = Template("""
@@ -37,8 +40,6 @@ not want to participate, please reply to this email and you will be removed and
 your information expunged.
 """.strip())
 
-CEFR_LEVELS = {"a1", "a2", "b1", "b2", "c1", "c2"}
-
 
 def prompts(email):
     native_lang = input("Native language (iso alpha2 code) > ")
@@ -58,10 +59,52 @@ def prompts(email):
             else:
                 break
         other_langs.append((other_lang_obj, cefr))
+    while 1:
+        proof_type = input(
+            "Proof type (yki_intermediate/yki_advanced/other) > "
+        )
+        if proof_type in ProofType.__members__:
+            proof_type = ProofType[proof_type]
+            break
+    while 1:
+        proof_age = input(
+            "Proof age (lt1/lt3/lt5/gte5) > "
+        )
+        if proof_age in ProofAge.__members__:
+            proof_age = ProofAge[proof_age]
+            break
+    text_on_proof = []
+    while 1:
+        inp = input("Text on proof > ")
+        if inp == "":
+            text_on_proof = "\n".join(text_on_proof)
+            break
+        text_on_proof.append(inp)
+    cefrs = []
+    for type in ("proof", "selfassess"):
+        for skill in CEFR_SKILLS:
+            while 1:
+                level = input(f"{type} {skill} > ")
+                if level in CEFR_LEVELS:
+                    level = CEFR_LEVELS.index(level) + 1
+                else:
+                    level = int(level)
+                    if level < 1 or level > 6:
+                        continue
+                break
+            cefrs.append((type, skill, level))
+    print()
     print("Email:", email)
-    print("Native language", native_lang_obj.display_name())
+    print("Native language:", native_lang_obj.display_name())
     for other_lang, cefr in other_langs:
-        print("Other language", other_lang.display_name(), cefr)
+        print("Other language:", other_lang.display_name(), cefr)
+    print("Proof type:", proof_type.name)
+    print("Proof age:", proof_age.name)
+    print("Text on proof:")
+    print(text_on_proof)
+    for type, skill, level in cefrs:
+        print(type.title(), skill.title() + ":", "{}/{}".format(CEFR_LEVELS[level - 1].upper(), level))
+    print()
     while 1:
         resp = input("Confirm? (y/n) > ").strip().lower()
         if resp == "n":
@@ -70,13 +113,13 @@ def prompts(email):
         elif resp == "y":
             print("Inserting")
             break
-    return native_lang_obj, other_langs
+    return native_lang_obj, other_langs, proof_type, proof_age, text_on_proof, cefrs
 
 
 @click.command()
 @click.argument("email")
 def main(email):
-    native_lang, other_langs = prompts(email)
+    native_lang, other_langs, proof_type, proof_age, text_on_proof, cefrs = prompts(email)
     session = get_session()
     token = shortuuid.uuid()
     with session.begin():
@@ -92,6 +135,13 @@ def main(email):
             complete_deadline=(
                 create_datetime + datetime.timedelta(weeks=3)
             ).date(),
+            proof_type=proof_type,
+            proof_age=proof_age,
+            text_on_proof=text_on_proof,
+            **{
+                f"cefr_{type}_{skill}": level
+                for type, skill, level in cefrs
+            }
         )
         session.add(participant)
         participant_language = ParticipantLanguage(

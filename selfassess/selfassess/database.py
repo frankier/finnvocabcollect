@@ -1,9 +1,24 @@
-from sqlalchemy import Column, Date, DateTime, Enum, ForeignKey, func, Integer, String, JSON
+from sqlalchemy import (
+    Column, Date, DateTime, Enum, ForeignKey, func, Integer, String, JSON
+)
 from sqlalchemy.orm import declarative_base, relationship
 import enum
+from .quali import ProofType, ProofAge, CEFR_LEVELS
+from wtforms import RadioField, TextAreaField
 
 
 Base = declarative_base()
+CEFR_INFO = {
+    "form_field_class": RadioField,
+    "choices": list(enumerate(
+        (
+            f"CEFR {cefr.upper()} / YKI {yki}"
+            for yki, cefr
+            in enumerate(CEFR_LEVELS, start=1)
+        ),
+        start=1
+    ))
+}
 
 
 class Participant(Base):
@@ -16,11 +31,22 @@ class Participant(Base):
     accept_deadline = Column(Date, nullable=False)
     withdraw_date = Column(DateTime)
     email = Column(String, unique=True, nullable=False)
-    given_name = Column(String)
-    surname = Column(String)
+    given_name = Column(String, info={"label": "Given name"})
+    surname = Column(String, info={"label": "Surname"})
     proof = Column(String)
     proof_upload_date = Column(DateTime)
     proof_accept_date = Column(DateTime)
+    proof_type = Column(Enum(ProofType), nullable=False, info={"label": "Type of proof"})
+    proof_age = Column(Enum(ProofAge), nullable=False, info={"label": "Age of proof"})
+    cefr_proof_speaking = Column(Integer, info=CEFR_INFO)
+    cefr_proof_writing = Column(Integer, info=CEFR_INFO)
+    cefr_proof_listening_comprehension = Column(Integer, info=CEFR_INFO)
+    cefr_proof_reading_comprehension = Column(Integer, info=CEFR_INFO)
+    cefr_selfassess_speaking = Column(Integer, info=CEFR_INFO)
+    cefr_selfassess_writing = Column(Integer, info=CEFR_INFO)
+    cefr_selfassess_listening_comprehension = Column(Integer, info=CEFR_INFO)
+    cefr_selfassess_reading_comprehension = Column(Integer, info=CEFR_INFO)
+    text_on_proof = Column(String, nullable=False, default="", info={"form_field_class": TextAreaField})
     selfassess_start_date = Column(DateTime)
     selfassess_finish_date = Column(DateTime)
     selfassess_accept_date = Column(DateTime)

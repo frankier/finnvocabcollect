@@ -1,22 +1,53 @@
 {% extends "base.html" %}
 
+{% macro cefr_block(fields) %}
+    <table class="tc ml3">
+        <tr>
+            <th></th>
+            {% for choice in fields[0] %}
+                <th class="normal">{{ choice.label.text.replace("CEFR ", "").replace("YKI ", "").replace(" / ", "<br>") | safe }}</th>
+            {% endfor %}
+        </tr>
+        {% for field in fields %}
+            <tr>
+                <th class="normal tr h2">
+                    {% set bits = field.label.text.split("_") | list %}
+                    {{ bits[2:] | join(" ") | title }}
+                </th>
+                {% for opt in field %}
+                    <td>{{ opt }}</td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    </table>
+{%- endmacro %}
+
 {% block body %}
+{% if wtform.errors %}
+    <ul>
+        {% for field_name, field_errors in wtform.errors|dictsort if field_errors %}
+            {% for error in field_errors %}
+                <li>{{ wtform[field_name].label }}: {{ error }}</li>
+            {% endfor %}
+        {% endfor %}
+    </ul>
+{% endif %}
 <form method="post" enctype="multipart/form-data" class="ma5 mw7 center f5">
 
     <div class="flex items-center ma3">
-        <label class="w5" for="givenname">
+        <label class="w5" for="{{ wtform.given_name.name }}">
             Given name<br>
             <span class="i f6">(Will be used for payment purposes.)</span>
         </label>
-        <input class="ml3" type="textbox" name="givenname" id="givenname" required>
+        {{ wtform.given_name(class_="ml3") }}
     </div>
 
     <div class="flex items-center ma3">
-        <label class="w5" for="surname">
+        <label class="w5" for="{{ wtform.surname.name }}">
             Surname<br>
             <span class="i f6">(Will be used for payment purposes.)</span>
         </label>
-        <input class="ml3" type="textbox" name="surname" id="surname" required>
+        {{ wtform.surname(class_="ml3") }}
     </div>
 
     <div class="flex items-center ma3">
@@ -34,6 +65,55 @@
             The photo is used for verification only and will be deleted after
             the details are confirmed.
         </label>
+    </div>
+
+    <div class="flex items-center ma3">
+        {{ wtform.proof_type.label(class_="w5") }}
+        {{ wtform.proof_type(class_="ml3") }}
+    </div>
+
+    <div class="flex items-center ma3">
+        {{ wtform.proof_age.label(class_="w5") }}
+        {{ wtform.proof_age(class_="ml3") }}
+    </div>
+
+    <div class="flex items-center ma3">
+        <label class="w5" for="{{ wtform.text_on_proof.name }}">
+            Text on proof<br>
+            <span class="i f6">Please transcribe the main text visible on your proof from your photo</span>
+        </label>
+        {{ wtform.text_on_proof(class_="ml3") }}
+    </div>
+
+    <div class="flex items-center ma3">
+        <label class="w5" for="proof_cefr">
+            CEFR levels according to proof
+        </label>
+        {{ cefr_block([
+            wtform.cefr_proof_speaking,
+            wtform.cefr_proof_writing,
+            wtform.cefr_proof_listening_comprehension,
+            wtform.cefr_proof_reading_comprehension
+        ]) }}
+    </div>
+
+    <div class="flex items-center ma3">
+        <label class="w5" for="surname">
+            Self assessed CEFR levels<br>
+            <span class="i f6">
+                Please use <a
+                    href="https://www.coe.int/en/web/portfolio/self-assessment-grid">CEFR
+                    self-assessment grid</a> to make a self assessment of your
+                current. Please combine spoken interaction and spoken
+                production into speaking.
+            </span>
+        </label>
+        {{ cefr_block([
+            wtform.cefr_selfassess_speaking,
+            wtform.cefr_selfassess_writing,
+            wtform.cefr_selfassess_listening_comprehension,
+            wtform.cefr_selfassess_reading_comprehension
+        ]) }}
     </div>
 
     <div class="flex items-center ma4 justify-around">

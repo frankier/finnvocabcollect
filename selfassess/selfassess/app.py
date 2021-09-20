@@ -30,6 +30,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import scoped_session
 from .utils import get_async_session
 from .queries import recent_responses_for_participant
+from .forms import ParticipantForm
 import random
 
 app = Quart(__name__)
@@ -216,10 +217,14 @@ async def proof():
     if user.proof is not None:
         await flash("Proof has already been uploaded")
         return redirect(url_for("overview"))
-    if request.method == 'POST':
-        form = await request.form
-        user.given_name = form["givenname"]
-        user.surname = form["surname"]
+    form = await request.form
+    wtform = ParticipantForm(formdata=form, obj=user)
+    if request.method == 'POST' and wtform.validate():
+        # Save most fields
+        wtform.populate_obj(user)
+        print(type(user.proof_type), repr(user.proof_type))
+        print(type(user.proof_age), repr(user.proof_age))
+        # Deal with file manually
         files = await request.files
         fobj = files["proof"]
         plain_filename = fobj.filename
@@ -232,15 +237,20 @@ async def proof():
         await fobj.save(pjoin(app.config['UPLOAD_DIR'], filename))
         user.proof = filename
         user.proof_upload_date = datetime.datetime.now()
+        # Commit
         await dbsess.commit()
         await flash(
             "Proof uploaded. " +
             "It will be verified within a few days. " +
-            "In the mean time you can proceed with the study."
+            "In the mean time you can proceed with the study. " +
+            "Please reply to your invitation email if you need to modify any details."
         )
         return redirect(url_for("overview"))
     else:
-        return await render_template("proof.html")
+        return await render_template(
+            "proof.html",
+            wtform=wtform
+        )
 
 
 async def ajax_redirect(url):
