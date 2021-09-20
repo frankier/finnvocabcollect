@@ -147,12 +147,14 @@ class MiniexamSlot(Base):
     word = relationship("Word", back_populates="miniexam_slots")
 
 
+@enum.unique
 class MiniexamResponseLanguage(enum.Enum):
     en = 1
     hu = 2
     ru = 3
 
 
+@enum.unique
 class MiniexamResponseType(enum.Enum):
     trans_defn = 1
     topic = 2
@@ -173,13 +175,15 @@ class MiniexamResponse(Base):
     slot = relationship("MiniexamSlot", back_populates="responses")
 
 
+@enum.unique
 class SessionEvent(enum.Enum):
     overview_hit = 1
     selfassess_hit = 2
     selfassess_focus = 3
     selfassess_blur = 4
-    miniexam_focus = 3
-    miniexam_blur = 4
+    miniexam_focus = 5
+    miniexam_blur = 6
+    miniexam_input = 7
 
 
 class SessionLogEntry(Base):

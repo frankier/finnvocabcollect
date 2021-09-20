@@ -47,8 +47,9 @@ dbsess = scoped_session(
 )
 
 
-async def add_event(event_type):
+def add_event(participant, event_type):
     dbsess.add(SessionLogEntry(
+        participant_id=participant.id,
         type=event_type,
         timestamp=datetime.datetime.now(),
         payload=json.dumps({
@@ -466,6 +467,7 @@ async def miniexam():
 @app.route('/track', methods=['POST'])
 @user_required
 async def track():
+    user = await current_user
     form = await request.form
     event = form.get("event")
     if event == "selfassesswindowfocus":
@@ -476,9 +478,11 @@ async def track():
         event_type = SessionEvent.miniexam_focus
     elif event == "miniexamwindowblur":
         event_type = SessionEvent.miniexam_blur
+    elif event == "miniexaminput":
+        event_type = SessionEvent.miniexam_input
     else:
         abort(404)
-    await add_event(event_type)
+    add_event(user, event_type)
     await dbsess.commit()
     return "yep"
 
