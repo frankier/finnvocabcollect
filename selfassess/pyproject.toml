@@ -7,7 +7,6 @@ authors = ["Frankie Robertson <frankie@robertson.name>"]
 [tool.poetry.dependencies]
 python = "^3.8"
 Flask = "^2.0.1"
-orjson = "^3.6.1"
 Quart = "^0.15.1"
 SQLAlchemy = "^1.4.22"
 aiosqlite = "^0.17.0"

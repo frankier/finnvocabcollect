@@ -1,5 +1,5 @@
 import quart.flask_patch  # noqa
-import orjson
+import json
 import os
 from os.path import join as pjoin
 from functools import wraps
@@ -51,7 +51,7 @@ async def add_event(event_type):
     dbsess.add(SessionLogEntry(
         type=event_type,
         timestamp=datetime.datetime.now(),
-        payload=orjson.dumps({
+        payload=json.dumps({
             "remote_addr": request.remote_addr,
             "user_agent": request.headers.get('User-Agent'),
         })

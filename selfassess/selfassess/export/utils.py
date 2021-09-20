@@ -1,4 +1,4 @@
-import orjson
+import json
 import user_agents
 from statistics import mode
 from selfassess.database import Response, SessionLogEntry
@@ -75,7 +75,7 @@ def get_participant_sessions(participant):
             sessions[-1]["has_selfassess"] = True
             sessions[-1]["response"].append(event)
         elif isinstance(event, SessionLogEntry):
-            device = ua_to_device(orjson.loads(event.payload)["user_agent"])
+            device = ua_to_device(json.loads(event.payload)["user_agent"])
             sessions[-1]["devices"].append(device)
         last_timestamp = timestamp
     end_session(timestamp)
