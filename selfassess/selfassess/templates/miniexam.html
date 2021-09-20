@@ -18,6 +18,12 @@
      class="ma5 mt0 mw7 center"
      action="{{ url_for("miniexam") }}"
 >
+    <input
+        type="hidden"
+        name="event"
+        value="miniexaminput"
+        hx-post="{{ url_for("track") }}"
+        hx-trigger="input from:closest form">
     <div class="f4 lh-copy">
         <p class="f3">
             Please demonstrate your knowledge of the following words.
