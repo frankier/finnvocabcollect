@@ -27,7 +27,7 @@ from .database import (
 )
 from sqlalchemy import select
 from sqlalchemy import func
-from sqlalchemy.orm import scoped_session
+from sqlalchemy.orm import scoped_session, joinedload
 from .utils import get_async_session
 from .queries import recent_responses_for_participant
 from .forms import ParticipantForm
@@ -359,13 +359,13 @@ async def selfassess():
             f"Batch of {batch_target} finished."
         )
         return await ajax_redirect(url_for("overview"))
-    next_word = (await dbsess.execute(
-        select(Word).join(ResponseSlot).where(
+    next_response_slot = (await dbsess.execute(
+        select(ResponseSlot).where(
             (ResponseSlot.response_order == user.next_response)
             & (ResponseSlot.participant_id == user.id)
-        )
+        ).options(joinedload(ResponseSlot.word))
     )).scalars().first()
-    if next_word is None:
+    if next_response_slot is None:
         # Done
         await finalise_selfassess(user)
         await flash(
@@ -379,15 +379,15 @@ async def selfassess():
         template = "selfassess.html"
     dbsess.add(
         Presentation(
-            response_slot_id=response_slot.id,
+            response_slot_id=next_response_slot.id,
             timestamp=datetime.datetime.now()
         )
     )
     await dbsess.commit()
     return await render_template(
         template,
-        word=next_word.word,
-        word_id=next_word.id,
+        word=next_response_slot.word.word,
+        word_id=next_response_slot.word.id,
         cur_word_idx=cur_word_idx + 1,
         total_words=total_words,
         batch_complete=batch_complete,
