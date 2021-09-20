@@ -1,15 +1,18 @@
-from math import log10, isnan
+from math import log10
 import random
 import click
 import pandas
 from finnwordlist.aggs import add_aggs
-from finnwordlist.utils.wordlists import read_bad_list, read_nss, DEFAULT_POS_FILTER
-from finnwordlist.merge import redistribute_compound_weights, drop_compositional_derivations, merge_duplicates, drop_derivations_tradeoff
-from pprint import pprint
+from finnwordlist.utils.wordlists import (
+    read_bad_list
+)
 import numpy as np
 import sys
 import scipy.stats as stats
-from finnwordlist.multicorpusfreqs import CORPORA, REL_FREQ_PREFIX, REL_FREQ_COLS, get_totals, get_orders, add_word_to_coverages, recalculate_coverages
+from finnwordlist.multicorpusfreqs import (
+    CORPORA, REL_FREQ_COLS, get_totals, get_orders, add_word_to_coverages,
+    recalculate_coverages
+)
 from finnwordlist.utils.stats import kde_mode
 
 
@@ -163,16 +166,15 @@ def main(inf, derivtrim_inf, outf):
 
     #coverages = recalculate_coverages(freqs_df, current_wordlist)
 
-    print("Coverages after trimming derivations and compounds")
-    print_coverages()
-    print()
-
     # Must recompute these after trimming
     totals = get_totals(derivtrim_df)
     orders = get_orders(derivtrim_df)
     derivs_coverages = recalculate_coverages(derivtrim_df, current_wordlist)
 
     first_words_derivs = take_from_all(current_wordlist, derivs_coverages, 2000, derivtrim_df, orders)
+
+    print("Taken 2000 from other list")
+    print(len(current_wordlist))
 
     # Fill up to 90% coverage of all corpora
     #fill_to_limit(current_wordlist, part_derivs_coverages, totals, derivtrim_df, orders)
