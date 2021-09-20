@@ -80,22 +80,22 @@
                     </li>
                     <li>
                         <a href="{{ url_for("selfassess") }}?count=300">
-                            Do 300 (= 30 mins)
+                            Answer 300 (20 mins)
                         </a>
                     </li>
                     <li>
                         <a href="{{ url_for("selfassess") }}?count=500">
-                            Do 500 (= 45 mins)
+                            Answer 500 (30 mins)
                         </a>
                     </li>
                     <li>
                         <a href="{{ url_for("selfassess") }}?count=1000">
-                            Do 1000 (= 90 mins)
+                            Answer 1000 (1 hour)
                         </a>
                     </li>
                     <li>
                         <form action="{{ url_for("selfassess") }}">
-                            Do
+                            Answer
                             <input name="count" type="number" value="100" min="1" max="{{ total_words }}" size="8">
                             <button type="submit">Go</button>
                         </form>
