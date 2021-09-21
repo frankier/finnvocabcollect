@@ -13,7 +13,7 @@
       <div>
         {% block topbar %}{% endblock %}
       </div>
-      <h3 class="normal ma0 tr">
+      <h3 class="normal ma0 tc tr-ns mw-100 overflow-hidden">
         Logged in as <span class="courier">{{ email }}</span><br>
         {% if accept_deadline %}
           Start self-assessment by: {{ accept_deadline.strftime('%A&nbsp;%d/%m/%Y') | safe }}<br>

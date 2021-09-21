@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% macro box(type) -%}
-    <div class="mh1 mv3 dib pt2 w3 h3 v-mid tc f3 ba bw3 br3
+    <div class="ml1 mr3 mv3 dib pt2 w3 h3 v-mid tc f3 ba bw3 br3
         {% if type == "tick" %}
             b--dark-green bg-green washed-green">✓
         {% elif type == "cross" %}
@@ -18,41 +18,49 @@
     <ol>
 
         <li>
-            {% if accepted %}
-                {{ box("tick") }}
-            {% else %}
-                {{ box("cross") }}
-            {% endif %}
-            {% if not accepted %}
-                <a href="{{ url_for("terms") }}">
-            {% endif %}
-                Learn about the study and read its terms
-            {% if not accepted %}
-                </a>
-            {% endif %}
+            <div class="flex items-center">
+                {% if accepted %}
+                    {{ box("tick") }}
+                {% else %}
+                    {{ box("cross") }}
+                {% endif %}
+                <div>
+                    {% if not accepted %}
+                        <a href="{{ url_for("terms") }}">
+                    {% endif %}
+                        Learn about the study and read its terms
+                    {% if not accepted %}
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
         </li>
 
         <li>
+            <div class="flex items-center">
+                {% if language_proof == "accepted" %}
+                    {{ box("tick") }}
+                {% elif language_proof == "pending" %}
+                    {{ box("dash") }}
+                {% else %}
+                    {{ box("cross") }}
+                {% endif %}
+                <div>
+                    {% if language_proof == "none" %}
+                        <a href="{{ url_for("proof") }}">
+                    {% endif %}
+                        Submit your basic information and language proof
+                    {% if language_proof == "none" %}
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
             {% if language_proof == "accepted" %}
-                {{ box("tick") }}
-            {% elif language_proof == "pending" %}
-                {{ box("dash") }}
-            {% else %}
-                {{ box("cross") }}
-            {% endif %}
-            {% if language_proof == "none" %}
-                <a href="{{ url_for("proof") }}">
-            {% endif %}
-                Submit your basic information and language proof
-            {% if language_proof == "none" %}
-                </a>
-            {% endif %}
-            {% if language_proof == "accepted" %}
-                <ul class="ml6">
+                <ul class="ma2 ml6-ns mv0-ns">
                     <li>Approved</li>
                 </ul>
             {% elif language_proof == "pending" %}
-                <ul class="ml6">
+                <ul class="ma2 ml6-ns mv0-ns">
                     <li>Awaiting approval</li>
                 </ul>
             {% endif %}
@@ -63,15 +71,19 @@
                 class="o-40"
             {% endif %}
         >
-            {% if selfassess == "accepted" %}
-                {{ box("tick") }}
-            {% elif selfassess == "pending" %}
-                {{ box("dash") }}
-            {% else %}
-                {{ box("cross") }}
-            {% endif %}
-            Complete the self-assessment
-            <ul class="ml6">
+            <div class="flex items-center">
+                {% if selfassess == "accepted" %}
+                    {{ box("tick") }}
+                {% elif selfassess == "pending" %}
+                    {{ box("dash") }}
+                {% else %}
+                    {{ box("cross") }}
+                {% endif %}
+                <div>
+                    Complete the self-assessment
+                </div>
+            </div>
+            <ul class="ma2 ml6-ns mv0-ns">
                 {% if selfassess == "none" and language_proof != "none" and accepted %}
                     <li>
                         <a href="{{ url_for("selfassess") }}">
@@ -116,21 +128,25 @@
                 class="o-40"
             {% endif %}
         >
-            {% if miniexam == "accepted" %}
-                {{ box("tick") }}
-            {% elif miniexam == "pending" %}
-                {{ box("dash") }}
-            {% else %}
-                {{ box("cross") }}
-            {% endif %}
-            {% if selfassess != "none" and miniexam == "none" %}
-                <a href="{{ url_for("miniexam") }}">
-            {% endif %}
-            Complete the mini-exam
-            {% if selfassess != "none" and miniexam == "none" %}
-                </a>
-            {% endif %}
-            <ul class="ml6">
+            <div class="flex items-center">
+                {% if miniexam == "accepted" %}
+                    {{ box("tick") }}
+                {% elif miniexam == "pending" %}
+                    {{ box("dash") }}
+                {% else %}
+                    {{ box("cross") }}
+                {% endif %}
+                <div>
+                    {% if selfassess != "none" and miniexam == "none" %}
+                        <a href="{{ url_for("miniexam") }}">
+                    {% endif %}
+                    Complete the mini-exam
+                    {% if selfassess != "none" and miniexam == "none" %}
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+            <ul class="ma2 ml6-ns mv0-ns">
                 {% if selfassess == "none" %}
                     <li>
                         Once you have finished the self-assessment, there is a short mini-exam.
@@ -150,9 +166,14 @@
         <li
             {% if miniexam == "none" %}
                 class="o-40"
-            {% endif %}
-        >{{ box("cross") }} Get paid
-            <ul class="ml6">
+            {% endif %}>
+            <div class="flex items-center">
+                {{ box("cross") }}
+                <div>
+                    Get paid
+                </div>
+            </div>
+            <ul class="ma2 ml6-ns mv0-ns">
                 <li>
                     Once all participants have finished, everyone will be sent
                     a link to get paid directly by the University of Jyväskylä.
