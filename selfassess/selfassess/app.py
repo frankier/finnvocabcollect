@@ -42,6 +42,16 @@ app.config["SECRET_KEY"] = os.environ["SECRET_KEY"]
 app.config["UPLOAD_DIR"] = os.environ["UPLOAD_DIR"]
 
 
+if "SENTRY_DSN" in os.environ:
+    import sentry_sdk
+    from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
+
+    sentry_sdk.init(dsn=os.environ["SENTRY_DSN"])
+
+    # https://github.com/getsentry/sentry-python/issues/1135
+    app.asgi_app = SentryAsgiMiddleware(app.asgi_app)._run_asgi3
+
+
 USER_SESSION_KEY = "user_id"
 current_user = LocalProxy(lambda: _get_user())
 
