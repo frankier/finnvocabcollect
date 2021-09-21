@@ -22,7 +22,7 @@
 {%- endmacro %}
 
 {% block topbar %}
-    <h3><a href="/">← Return to study overview</a></h3>
+    <h3 class="normal mt0 mb2 mb0-ns"><a href="/">← Return to study overview</a></h3>
 {% endblock %}
 
 {% block body %}
@@ -41,7 +41,7 @@
 <form
      id="selfassessform"
      method="post"
-     class="ma5 mt0 mw7 center f3 tc"
+     class="mv5 mt0 mw7 center-ns f3 tc mh2"
      hx-post="{{ url_for("selfassess") }}"
      hx-target="#wordinfo"
      hx-swap="outerHTML"

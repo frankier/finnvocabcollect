@@ -1,5 +1,5 @@
 <div id="wordinfo">
-    <h3 class="tr ma0 normal">
+    <h3 class="tr ma0 normal f4 f3-ns">
         {{ batch_complete + 1 }}/
         {%- if batch_target is not none -%}
             {{ batch_target }}
@@ -7,7 +7,7 @@
             unlimited
         {%- endif -%}
     </h3>
-    <h1>{{ word }}</h1>
+    <h1 class="{% if word | length >= 18 %}f3{% else %}f2{% endif %} f1-ns">{{ word }}</h1>
     <input type="hidden" name="word" value="{{ word }}">
     <input type="hidden" name="word_id" value="{{ word_id }}">
     <input type="hidden" name="complete" value="{{ batch_complete }}">
