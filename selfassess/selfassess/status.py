@@ -35,8 +35,8 @@ def main():
         ))
         sessions = [
             part_session
-            for part_session in get_participant_sessions(participant)
-            if part_session["has_selfassess"]
+            for part_session in
+            get_participant_sessions(participant, only_selfassess=True)
         ]
         total_mins = int(sum((
             part_session["time"].total_seconds()

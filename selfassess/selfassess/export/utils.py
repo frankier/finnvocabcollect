@@ -1,7 +1,7 @@
 import json
 import user_agents
 from statistics import mode
-from selfassess.database import Response, SessionLogEntry
+from selfassess.database import Response, SessionLogEntry, SessionEvent
 
 
 SESSION_TIMEOUT = 300
@@ -19,30 +19,55 @@ def ua_to_device(ua):
         return "unknown"
 
 
-def get_participant_sessions(participant):
+def get_participant_sessions(
+    participant,
+    only_selfassess=False,
+    only_miniexam=False
+):
     events = []
     for session_log_entry in participant.session_log_entries:
+        if (
+            (
+                only_selfassess and
+                session_log_entry.type not in (
+                    SessionEvent.selfassess_hit,
+                    SessionEvent.selfassess_focus,
+                    SessionEvent.selfassess_blur,
+                    SessionEvent.selfassess_input
+                )
+            )
+            or
+            (
+                only_miniexam and
+                session_log_entry.type not in (
+                    SessionEvent.miniexam_blur,
+                    SessionEvent.miniexam_focus,
+                    SessionEvent.miniexam_input
+                )
+            )
+        ):
+            continue
         events.append((session_log_entry.timestamp, session_log_entry))
-    for slot in participant.response_slots:
-        latest_timestamp = None
-        responses = []
-        for response in slot.responses:
-            if (latest_timestamp is None
-                    or response.timestamp > latest_timestamp):
-                latest_timestamp = response.timestamp
-            responses.append((response.timestamp, response))
-        for timestamp, response in responses:
-            response.is_latest = timestamp == latest_timestamp
-        events.extend(responses)
-        for presentation in slot.presentations:
-            events.append((presentation.timestamp, presentation))
+    if not only_miniexam:
+        for slot in participant.response_slots:
+            latest_timestamp = None
+            responses = []
+            for response in slot.responses:
+                if (latest_timestamp is None
+                        or response.timestamp > latest_timestamp):
+                    latest_timestamp = response.timestamp
+                responses.append((response.timestamp, response))
+            for timestamp, response in responses:
+                response.is_latest = timestamp == latest_timestamp
+            events.extend(responses)
+            for presentation in slot.presentations:
+                events.append((presentation.timestamp, presentation))
     events.sort()
     last_timestamp = None
     sessions = []
 
     def new_session():
         sessions.append({
-            "has_selfassess": False,
             "response": [],
             "devices": [],
             "first_timestamp": None,
@@ -72,7 +97,6 @@ def get_participant_sessions(participant):
         if sessions[-1]["first_timestamp"] is None:
             sessions[-1]["first_timestamp"] = timestamp
         if isinstance(event, Response):
-            sessions[-1]["has_selfassess"] = True
             sessions[-1]["response"].append(event)
         elif isinstance(event, SessionLogEntry):
             device = ua_to_device(json.loads(event.payload)["user_agent"])

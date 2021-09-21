@@ -498,6 +498,8 @@ async def track():
         event_type = SessionEvent.selfassess_focus
     elif event == "selfassesswindowblur":
         event_type = SessionEvent.selfassess_blur
+    elif event == "selfassessinput":
+        event_type = SessionEvent.selfassess_input
     elif event == "miniexamwindowfocus":
         event_type = SessionEvent.miniexam_focus
     elif event == "miniexamwindowblur":

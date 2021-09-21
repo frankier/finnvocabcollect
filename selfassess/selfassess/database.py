@@ -184,6 +184,7 @@ class SessionEvent(enum.Enum):
     miniexam_focus = 5
     miniexam_blur = 6
     miniexam_input = 7
+    selfassess_input = 8
 
 
 class SessionLogEntry(Base):

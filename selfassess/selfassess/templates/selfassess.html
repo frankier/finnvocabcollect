@@ -39,12 +39,19 @@
     hx-post="{{ url_for("track") }}"
     hx-trigger="blur from:window">
 <form
+     id="selfassessform"
      method="post"
      class="ma5 mt0 mw7 center f3 tc"
      hx-post="{{ url_for("selfassess") }}"
      hx-target="#wordinfo"
      hx-swap="outerHTML"
 >
+    <input
+        type="hidden"
+        name="event"
+        value="selfassessinput"
+        hx-post="{{ url_for("track") }}"
+        hx-trigger="input from:#selfassessform throttle:1s">
     {% include "wordinfo_snippet.html" %}
     <div class="flex items-center justify-center ma3">
         {{ box(1) }}

@@ -34,7 +34,6 @@ def main(csvout):
                 for part_session
                 in get_participant_sessions(participant)
             ))
-            + 60 * 30
         ) / (60 * 60)
         period.append(int(time * 4 + 0.5) / 4)
     df = DataFrame({

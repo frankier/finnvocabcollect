@@ -18,7 +18,9 @@ create table participant (
     id int primary key,
     {}
     proof_age varchar,
-    proof_type varchar
+    proof_type varchar,
+    miniexam_time_secs int,
+    miniexam_day int
 );
 """.format(
     "\n".join((f"{field} int," for field in CEFR_FIELDS))
@@ -41,7 +43,8 @@ def setup_duckdb(db_out):
         id int primary key,
         participant_id int,
         device varchar,
-        time_secs int
+        time_secs int,
+        day int
     );
     create table selfassess_response (
         session_id int,
@@ -81,8 +84,22 @@ def main(db_out, which):
             (which == "incomplete" and participant.miniexam_finish_date is not None)
         ):
             continue
+        selfassess_sessions = get_participant_sessions(
+            participant,
+            only_selfassess=True
+        )
+        first_date = selfassess_sessions[0]["first_timestamp"].date()
+        miniexam_sessions = get_participant_sessions(
+            participant,
+            only_miniexam=True
+        )
+        miniexam_time_secs = int(sum((
+            miniexam_session["time"].total_seconds()
+            for miniexam_session
+            in miniexam_sessions
+        )) + 0.5)
         ddb_conn.execute(
-            "insert into participant values (?, {} ?, ?)".format(
+            "insert into participant values (?, {} ?, ?, ?, ?)".format(
                 "?, " * len(CEFR_FIELDS)
             ),
             [
@@ -93,7 +110,9 @@ def main(db_out, which):
                     in CEFR_FIELDS
                 ),
                 participant.proof_age.name,
-                participant.proof_type.name
+                participant.proof_type.name,
+                miniexam_time_secs,
+                ((participant.miniexam_finish_date).date() - first_date).days
             ]
         )
         participant_languages = []
@@ -107,21 +126,20 @@ def main(db_out, which):
             "insert into participant_language values (?, ?, ?)",
             participant_languages
         )
-        part_sessions = get_participant_sessions(participant)
-        for part_session in part_sessions:
-            if not part_session["has_selfassess"]:
-                continue
+        for selfassess_session in selfassess_sessions:
+            session_date = selfassess_session["first_timestamp"].date()
             ddb_conn.execute(
-                "insert into selfassess_session values (?, ?, ?, ?)",
+                "insert into selfassess_session values (?, ?, ?, ?, ?)",
                 [
                     session_id,
                     pid,
-                    part_session["device"],
-                    int(part_session["time"].total_seconds() + 0.5)
+                    selfassess_session["device"],
+                    int(selfassess_session["time"].total_seconds() + 0.5),
+                    (session_date - first_date).days
                 ]
             )
             response_vals = []
-            for response in part_session["response"]:
+            for response in selfassess_session["response"]:
                 if not response.is_latest:
                     continue
                 # TODO get reaction time using response.slot.presentations
