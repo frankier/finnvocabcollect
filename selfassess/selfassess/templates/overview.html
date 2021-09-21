@@ -123,11 +123,11 @@
             {% else %}
                 {{ box("cross") }}
             {% endif %}
-            {% if selfassess != "none" %}
+            {% if selfassess != "none" and miniexam == "none" %}
                 <a href="{{ url_for("miniexam") }}">
             {% endif %}
             Complete the mini-exam
-            {% if selfassess != "none" %}
+            {% if selfassess != "none" and miniexam == "none" %}
                 </a>
             {% endif %}
             <ul class="ml6">
