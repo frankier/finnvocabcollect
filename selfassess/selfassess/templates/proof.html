@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% macro cefr_block(fields) %}
-    <table class="tc ml3">
+    <table class="tc ml3-ns fl" style="width: min-content">
         <tr>
             <th></th>
             {% for choice in fields[0] %}
@@ -50,9 +50,9 @@
         {{ wtform.surname(class_="ml3") }}
     </div>
 
-    <div class="flex items-center ma3">
+    <div class="flex items-center-ns flex-column-reverse flex-row-ns mh3 mv4 mv3-ns">
         <input class="flex-none" type="file" name="proof" id="proof" accept="image/*" capture="camera" required>
-        <label for="proof" class="lh-copy">
+        <label for="proof" class="lh-copy mb2 mb0-ns">
 
             Please upload a photo showing the following:
 
@@ -77,16 +77,16 @@
         {{ wtform.proof_age(class_="ml3") }}
     </div>
 
-    <div class="flex items-center ma3">
-        <label class="w5" for="{{ wtform.text_on_proof.name }}">
+    <div class="flex items-center-ns flex-column flex-row-ns mh3 mv4 mv3-ns">
+        <label class="w5-ns mb2 mb0-ns" for="{{ wtform.text_on_proof.name }}">
             Text on proof<br>
             <span class="i f6">Please transcribe the main text visible on your proof from your photo</span>
         </label>
-        {{ wtform.text_on_proof(class_="ml3") }}
+        {{ wtform.text_on_proof(class_="ml3-ns") }}
     </div>
 
-    <div class="flex items-center ma3">
-        <label class="w5" for="proof_cefr">
+    <div class="flex items-center-ns flex-column flex-row-ns mh3 mv4 mv3-ns">
+        <label class="w5-ns mb2 mb0-ns" for="proof_cefr">
             CEFR levels according to proof
         </label>
         {{ cefr_block([
@@ -97,8 +97,8 @@
         ]) }}
     </div>
 
-    <div class="flex items-center ma3">
-        <label class="w5" for="surname">
+    <div class="flex items-center-ns flex-column flex-row-ns mh3 mv4 mv3-ns">
+        <label class="w5-ns mb2 mb0-ns" for="surname">
             Self assessed CEFR levels<br>
             <span class="i f6">
                 Please use <a

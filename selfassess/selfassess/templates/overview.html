@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% macro box(type) -%}
-    <div class="ml1 mr3 mv3 dib pt2 w3 h3 v-mid tc f3 ba bw3 br3
+    <div class="ml1 mr3 mv3 dib pt2 w3 h3 v-mid tc f3 ba bw3 br3 flex-none
         {% if type == "tick" %}
             b--dark-green bg-green washed-green">✓
         {% elif type == "cross" %}
