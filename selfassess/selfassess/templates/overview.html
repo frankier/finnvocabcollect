@@ -84,6 +84,13 @@
                 </div>
             </div>
             <ul class="ma2 ml6-ns mv0-ns">
+                {% if selfassess == "complete" %}
+                    <li>Approved</li>
+                {% elif selfassess == "pending" %}
+                    <li>Awaiting approval</li>
+                {% else %}
+                    <li>{{ completed_words }}/{{ total_words }} answered</li>
+                {% endif %}
                 {% if selfassess == "none" and language_proof != "none" and accepted %}
                     <li>
                         <a href="{{ url_for("selfassess") }}">
@@ -112,13 +119,6 @@
                             <button type="submit">Go</button>
                         </form>
                     </li>
-                {% endif %}
-                {% if selfassess == "complete" %}
-                    <li>Approved</li>
-                {% elif selfassess == "pending" %}
-                    <li>Awaiting approval</li>
-                {% else %}
-                    <li>{{ completed_words }}/{{ total_words }} completed</li>
                 {% endif %}
             </ul>
         </li>
