@@ -14,6 +14,7 @@
     hx-post="{{ url_for("track") }}"
     hx-trigger="blur from:window">
 <form
+     id="miniexamform"
      method="post"
      class="ma5 mt0 mw7 center"
      action="{{ url_for("miniexam") }}"
@@ -23,7 +24,7 @@
         name="event"
         value="miniexaminput"
         hx-post="{{ url_for("track") }}"
-        hx-trigger="input from:closest form">
+        hx-trigger="input from:#miniexamform throttle:1s">
     <div class="f4 lh-copy">
         <p class="f3">
             Please demonstrate your knowledge of the following words.
