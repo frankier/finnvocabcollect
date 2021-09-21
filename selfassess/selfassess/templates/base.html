@@ -16,9 +16,9 @@
       <h3 class="normal ma0 tr">
         Logged in as <span class="courier">{{ email }}</span><br>
         {% if accept_deadline %}
-          Start self-assessment by: {{ accept_deadline.strftime('%A %d/%m/%Y') }}<br>
+          Start self-assessment by: {{ accept_deadline.strftime('%A&nbsp;%d/%m/%Y') | safe }}<br>
         {% endif %}
-        Finish by: {{ deadline.strftime('%A %d/%m/%Y') }}
+        Finish by: {{ deadline.strftime('%A&nbsp;%d/%m/%Y') | safe }}
       </h3>
     </div>
 
