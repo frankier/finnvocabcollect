@@ -27,7 +27,8 @@ from .database import (
 )
 from sqlalchemy import select
 from sqlalchemy import func
-from sqlalchemy.orm import scoped_session, joinedload
+from sqlalchemy.orm import joinedload
+from sqlalchemy.ext.asyncio import async_scoped_session
 from .utils import get_async_session
 from .queries import recent_responses_for_participant
 from .forms import ParticipantForm
@@ -41,9 +42,15 @@ app.config["UPLOAD_DIR"] = os.environ["UPLOAD_DIR"]
 
 USER_SESSION_KEY = "user_id"
 current_user = LocalProxy(lambda: _get_user())
-dbsess = scoped_session(
+
+
+def scopefunc():
+    return id(_request_ctx_stack.top)
+
+
+dbsess = async_scoped_session(
     get_async_session(),
-    scopefunc=_request_ctx_stack.__ident_func__
+    scopefunc=scopefunc
 )
 
 
@@ -487,6 +494,11 @@ async def track():
     return "yep"
 
 
+@app.teardown_request
+async def teardown_db_req(exception):
+    await dbsess.close()
+
+
 @app.teardown_appcontext
-async def teardown_db(exception):
+async def teardown_db_app(exception):
     await dbsess.close()
