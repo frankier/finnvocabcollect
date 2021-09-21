@@ -54,12 +54,12 @@
                 set the disabled of #text_{{ word.id}} to (my value is 'donotknow')
                 then set the required of #text_{{ word.id}} to (my value is not 'donotknow')
                 ">
-                    <option value="definition_ru">Russian translation</option>
-                    <option value="definition_en">English translation</option>
-                    <option value="definition_fi">Finnish translation</option>
-                    <option value="topic_ru">Russian topic</option>
-                    <option value="topic_en">English topic</option>
-                    <option value="topic_fi">Finnish topic</option>
+                    {% for language in languages %}
+                        <option value="definition_{{ language.language }}">{{ language.display_name() }} translation</option>
+                    {% endfor %}
+                    {% for language in languages %}
+                        <option value="topic_{{ language.language }}">{{ language.display_name() }} topic</option>
+                    {% endfor %}
                     <option value="donotknow">Do not know</option>
                 </select> 
                 <input class="mt1 w-100" id="text_{{ word.id }}" name="response" required>

@@ -5,6 +5,7 @@ from os.path import join as pjoin
 from functools import wraps
 import datetime
 from werkzeug.utils import secure_filename
+import langcodes
 
 from quart import (
     _request_ctx_stack, Quart, request, session, abort, redirect,
@@ -14,6 +15,7 @@ from quart.templating import render_template
 from werkzeug.local import LocalProxy
 from .database import (
     Participant,
+    ParticipantLanguage,
     Presentation,
     Word,
     ResponseSlot,
@@ -403,6 +405,10 @@ async def selfassess():
     )
 
 
+def native_language(session, user):
+    return user.languages.filter(ParticipantLanguage.c.level == "native").first()
+
+
 @app.route("/miniexam", methods=['GET', 'POST'])
 @user_required
 async def miniexam():
@@ -465,9 +471,20 @@ async def miniexam():
                 MiniexamSlot.miniexam_order
             )
         )).scalars()
+        native_lang = (await dbsess.execute(
+            select(ParticipantLanguage.language).where(
+                (ParticipantLanguage.level == "native")
+                & (ParticipantLanguage.participant_id == user.id)
+            )
+        )).scalars().first()
+        languages = [langcodes.get(native_lang)]
+        if native_lang != "en":
+            languages.append(langcodes.get("en"))
+        languages.append(langcodes.get("fi"))
         return await render_template(
             "miniexam.html",
-            words=words
+            words=words,
+            languages=languages
         )
 
 
