@@ -16,28 +16,43 @@ from .quali import CEFR_LEVELS, CEFR_SKILLS
 
 
 EMAIL_TEMPLATE = Template("""
-/ Your participation in self-assessed Finnish vocabulary study
+Your participation in self-assessed Finnish vocabulary study / Osallistumisesi itsearvioituun suomen sanaston tutkimukseen
 ---
 
-(English below.) FINNISH HERE
+(English below.) Tämä sähköposti ja verkkosivusto ovat saatavilla vain
+englanniksi, koska kaikki osallistujat vastasivat ymmärtävänsä englantia. Jos
+sinulla on vaikeuksia ymmärtää tutkimusta, voit aina saada apua vastaamalla
+tähän sähköpostiin valitsemallasi kielellä.
 
 / / /
 
 Dear prospective participant,
 
 Thanks for your interest in our study. We can confirm we would like you to
-participate. The website below details the various steps:
+participate in our study of vocabulary in learners of the Finnish language.
+This website gives the full details of the study:
 
 {{ link }}
 
-The above link is your way to login to and access the study website. Please
-keep this email so you can continue to access the study website.
+The above link is a personal login to and access the study website. Please keep
+this email so you can continue to access the study website. Please do not share
+the above link with others.
 
 You can find further details about the study and confirm your participation
-using the website. Please do so within 10 days (by XX) or we will assume you no
-longer wish to participate in the study and remove you. If you know that you do
-not want to participate, please reply to this email and you will be removed and
-your information expunged.
+using the website. If you want to participate, please do so and begin the
+self-assessment within 7 days (by {{ accept_deadline }}) or we will assume you
+no longer wish to participate in the study and remove you. You must complete
+the whole study within 21 days (by {{ complete_deadline }}).
+
+If you already know that you do not want to participate, please let me know by
+replying to this email and you will be withdrawn and your information expunged.
+
+Best regards,
+
+Frankie Robertson
+Doctoral Researcher in Educational Technology
+Faculty of Information Technology
+University of Jyväskylä
 """.strip())
 
 
@@ -122,19 +137,21 @@ def main(email):
     native_lang, other_langs, proof_type, proof_age, text_on_proof, cefrs = prompts(email)
     session = get_session()
     token = shortuuid.uuid()
+    create_datetime = datetime.datetime.now()
+    accept_deadline = (
+        create_datetime + datetime.timedelta(weeks=1)
+    ).date()
+    complete_deadline = (
+        create_datetime + datetime.timedelta(weeks=3)
+    ).date()
     with session.begin():
-        create_datetime = datetime.datetime.now()
         participant = Participant(
             token=token,
             create_date=create_datetime,
             accept_date=None,
             email=email,
-            accept_deadline=(
-                create_datetime + datetime.timedelta(weeks=1)
-            ).date(),
-            complete_deadline=(
-                create_datetime + datetime.timedelta(weeks=3)
-            ).date(),
+            accept_deadline=accept_deadline,
+            complete_deadline=complete_deadline,
             proof_type=proof_type,
             proof_age=proof_age,
             text_on_proof=text_on_proof,
@@ -173,7 +190,11 @@ def main(email):
             return url_for("start", token=token)
     loop = asyncio.get_event_loop()
     link = loop.run_until_complete(get_link())
-    print(EMAIL_TEMPLATE.render(link=link))
+    print(EMAIL_TEMPLATE.render(
+        link=link,
+        accept_deadline=accept_deadline.strftime('%A %d/%m/%Y'),
+        complete_deadline=complete_deadline.strftime('%A %d/%m/%Y'),
+    ))
 
 
 if __name__ == "__main__":
