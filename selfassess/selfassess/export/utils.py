@@ -1,7 +1,7 @@
 import json
 import user_agents
 from statistics import mode
-from selfassess.database import Response, SessionLogEntry, SessionEvent
+from selfassess.database import Presentation, Response, SessionLogEntry, SessionEvent
 
 
 SESSION_TIMEOUT = 300
@@ -17,6 +17,17 @@ def ua_to_device(ua):
         return "pc"
     else:
         return "unknown"
+
+
+def gather_timestamped(objs):
+    objs_timestamped = [
+        (obj.timestamp, obj)
+        for obj
+        in objs
+    ]
+    if objs_timestamped:
+        objs_timestamped[-1][1].is_latest = True
+    return objs_timestamped
 
 
 def get_participant_sessions(
@@ -50,18 +61,8 @@ def get_participant_sessions(
         events.append((session_log_entry.timestamp, session_log_entry))
     if not only_miniexam:
         for slot in participant.response_slots:
-            latest_timestamp = None
-            responses = []
-            for response in slot.responses:
-                if (latest_timestamp is None
-                        or response.timestamp > latest_timestamp):
-                    latest_timestamp = response.timestamp
-                responses.append((response.timestamp, response))
-            for timestamp, response in responses:
-                response.is_latest = timestamp == latest_timestamp
-            events.extend(responses)
-            for presentation in slot.presentations:
-                events.append((presentation.timestamp, presentation))
+            events.extend(gather_timestamped(slot.responses))
+            events.extend(gather_timestamped(slot.presentations))
     events.sort()
     last_timestamp = None
     sessions = []

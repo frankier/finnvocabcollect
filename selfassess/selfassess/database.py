@@ -107,7 +107,7 @@ class ResponseSlot(Base):
 
     participant = relationship("Participant", back_populates="response_slots")
     responses = relationship("Response", back_populates="slot", order_by="Response.timestamp")
-    presentations = relationship("Presentation", back_populates="slot")
+    presentations = relationship("Presentation", back_populates="slot", order_by="Presentation.timestamp")
     word = relationship("Word", back_populates="response_slots")
 
 

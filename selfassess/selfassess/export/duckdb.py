@@ -50,7 +50,7 @@ def setup_duckdb(db_out):
         session_id int,
         word varchar,
         time_secs int,
-        grade int
+        rating int
     );
     create table miniexam_response (
         participant_id int,
@@ -88,7 +88,7 @@ def main(db_out, which):
             participant,
             only_selfassess=True
         )
-        first_date = selfassess_sessions[0]["first_timestamp"].date()
+        first_date = selfassess_sessions[0]["first_timestamp"].date() if selfassess_sessions else None
         miniexam_sessions = get_participant_sessions(
             participant,
             only_miniexam=True
@@ -112,7 +112,7 @@ def main(db_out, which):
                 participant.proof_age.name,
                 participant.proof_type.name,
                 miniexam_time_secs,
-                ((participant.miniexam_finish_date).date() - first_date).days
+                (participant.miniexam_finish_date.date() - first_date).days if participant.miniexam_finish_date else None
             ]
         )
         participant_languages = []
@@ -142,11 +142,13 @@ def main(db_out, which):
             for response in selfassess_session["response"]:
                 if not response.is_latest:
                     continue
-                # TODO get reaction time using response.slot.presentations
                 response_vals.append((
                     session_id,
                     response.slot.word.word,
-                    1,
+                    (
+                        response.timestamp
+                        - response.slot.presentations[-1].timestamp
+                    ).total_seconds(),
                     response.rating
                 ))
             session_id += 1
@@ -165,14 +167,13 @@ def main(db_out, which):
                     latest_response = response
             if not latest_response:
                 continue
-            # TODO: figure out how to grade and transfer grade here
             miniexam_responses.append((
                 pid,
                 miniexam_slot.word.word,
                 latest_response.response_lang.name if latest_response.response_lang is not None else None,
                 latest_response.response_type.name,
                 latest_response.response,
-                0
+                latest_response.mark
             ))
         ddb_conn.executemany(
             "insert into miniexam_response values (?, ?, ?, ?, ?, ?)",
