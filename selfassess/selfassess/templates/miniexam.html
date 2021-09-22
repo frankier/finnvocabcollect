@@ -1,6 +1,13 @@
 {% extends "base.html" %}
 
 {% block body %}
+<style type="text/css">
+@media screen and (min-width:30em) {
+    .cols2-ns {
+        column-count: 2;
+    }
+}
+</style>
 <input
     type="hidden"
     name="event"
@@ -16,7 +23,7 @@
 <form
      id="miniexamform"
      method="post"
-     class="ma5 mt0 mw7 center"
+     class="mv5 mt0 mw7 center-ns mh2"
      action="{{ url_for("miniexam") }}"
 >
     <input
@@ -44,9 +51,15 @@
             </li>
         </ul>
     </div>
-    <ul class="list" style="column-count: 2;">
+    <ul class="list cols2-ns">
         {% for word in words %}
-            <li class="pa4">
+            <li class="pa4 relative"
+            _="
+           on validityChange(valid)
+           if valid then add .bg-washed-green then remove .o-0 from #tick_{{ word.id }}
+           else remove .bg-washed-green then add .o-0 to #tick_{{ word.id }}
+           ">
+                <span id="tick_{{ word.id }}" class="absolute right-0 top-0 ma2 f3 dark-green o-0">✓</span>
                 <div class="tc f3 mb1">{{ word.word }}</div>
                 <input type="hidden" name="word_id" value="{{ word.id }}">
                 <select class="mv1" name="defn_type"
@@ -54,6 +67,7 @@
                 on change or load
                 set the disabled of #text_{{ word.id}} to (my value is 'donotknow')
                 then set the required of #text_{{ word.id}} to (my value is not 'donotknow')
+                then send validityChange(valid:(#text_{{ word.id}}.validity.valid)) to parentElement of me 
                 ">
                     {% for language in languages %}
                         <option value="definition_{{ language.language }}">{{ language.display_name() }} translation</option>
@@ -66,6 +80,7 @@
                 <input class="mt1 w-100" id="text_{{ word.id }}" name="response" required
                 _="
                 on input call me.setCustomValidity('')
+                on change send validityChange(valid:me.validity.valid) to parentElement of me
                 on invalid call me.setCustomValidity('Please fill this in or select \'Do not know\'')
                 ">
             </li>
