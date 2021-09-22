@@ -17,6 +17,7 @@ gensim = "^4.1.0"
 seaborn = "^0.11.2"
 finntk = "^0.0.73"
 orjson = "^3.6.3"
+freqknowfit = {git = "https://github.com/frankier/freqknowfit.git", rev = "main"}
 
 [tool.poetry.dev-dependencies]
 
