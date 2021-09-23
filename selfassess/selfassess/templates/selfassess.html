@@ -1,7 +1,16 @@
 {% extends "base.html" %}
 
-{% macro box(number) -%}
+{% macro but(desc) -%}
+    <button
+        _="on keypress[key is '{{ desc }}'] from <body/> call me.click()
+           on touchstart call me.click() then halt"
+        type="submit"
+        name="prev"
+        value="{{ desc }}"
+        class="btn bg-light-purple">{{ desc }}</button>
+{%- endmacro %}
 
+{% macro box(number) -%}
     <button
         _="on keypress[key is '{{ number }}'] from <body/> call me.click()
            on touchstart call me.click() then halt
@@ -46,7 +55,8 @@
      hx-post="{{ url_for("selfassess") }}"
      hx-target="#wordinfo"
      hx-swap="outerHTML"
->
+  >
+    <div class="d-inline-flex">{{ but("Previous") }}</div>
     <input
         type="hidden"
         name="event"

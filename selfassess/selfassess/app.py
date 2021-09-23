@@ -335,10 +335,14 @@ async def selfassess():
         await dbsess.commit()
     total_words = await get_total_words()
     cur_word_idx = user.next_response
+    newest_word = cur_word_idx
     if request.method == 'POST':
         form = await request.form
-        batch_complete = int(form["complete"])
-        if "count" in form:
+        if "prev" in form:
+            #batch_complete = batch_complete -1
+            user.next_response = user.next_response -1
+            batch_complete = int(form["complete"])-1
+        elif "count" in form:
             batch_target = int(form["count"])
         else:
             batch_target = None
@@ -352,12 +356,22 @@ async def selfassess():
             )
         )).scalars().first()
         if response_slot.response_order != cur_word_idx:
-            await flash(
-                "You already gave a response for that word. "
-                "The new response was discarded. "
-                "Please use only a single tab/window."
-            )
-            return await ajax_redirect(url_for("overview"))
+            #if response_slot.response_order == newest_word -1:
+            #    dbsess.add(
+            #        Response(
+            #            response_slot_id=response_slot.id,
+            #            timestamp=datetime.datetime.now(),
+            #            rating=rating,
+            #        )
+            #    )
+            #    await dbsess.commit()
+            if True:
+                await flash(
+                    "You already gave a response for that word. "
+                    "The new response was discarded. "
+                    "Please use only a single tab/window."
+                )
+                return await ajax_redirect(url_for("overview"))
         batch_complete += 1
         user.next_response += 1
         dbsess.add(
