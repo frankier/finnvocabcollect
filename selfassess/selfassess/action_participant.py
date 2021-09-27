@@ -16,14 +16,14 @@ from .utils import get_session
     ])
 )
 @click.argument("email")
-def main(stage, email):
+def main(action, email):
     session = get_session()
     participant = (
         session.query(Participant).filter(email=email).scalars().first()
     )
     setattr(
         participant,
-        f"{stage}_date",
+        f"{action}_date",
         datetime.datetime.now()
     )
     session.add(participant)
