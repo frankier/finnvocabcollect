@@ -19,7 +19,7 @@ from .utils import get_session
 def main(action, email):
     session = get_session()
     participant = (
-        session.query(Participant).filter(email=email).scalars().first()
+        session.query(Participant).filter_by(email=email).scalars().first()
     )
     setattr(
         participant,
