@@ -140,7 +140,7 @@ def main(db_out, which):
             )
             response_vals = []
             for response in selfassess_session["response"]:
-                if not response.is_latest:
+                if not getattr(response, "is_latest", False):
                     continue
                 response_vals.append((
                     session_id,
