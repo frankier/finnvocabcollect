@@ -56,7 +56,12 @@
      hx-target="#wordinfo"
      hx-swap="outerHTML"
   >
-    <div class="d-inline-flex">{{ but("Previous") }}</div>
+    {% if prev_but %}
+        <div class="d-inline-flex">{{ but("Previous") }}</div>
+    {% else %}
+        <div class="d-inline-flex">{{ but("Here") }}</div>
+    {% endif %}
+    
     <input
         type="hidden"
         name="event"
