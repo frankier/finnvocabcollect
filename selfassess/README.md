@@ -36,3 +36,10 @@ Every time you want to add a new participant run:
    CSV with just information about the self assessment
  * `python -m selfassess.export.payment` Export participant information for
    payment
+
+## Remote management
+
+Get a shell on Rahti with:
+
+    . ./login.sh
+    ./rsh.sh
