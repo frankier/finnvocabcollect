@@ -1,4 +1,5 @@
 import os
+import quart.flask_patch  # noqa
 
 if "SENTRY_DSN" in os.environ:
     import sentry_sdk
@@ -9,7 +10,6 @@ if "SENTRY_DSN" in os.environ:
 else:
     has_sentry = False
 
-import quart.flask_patch  # noqa
 import json
 from os.path import join as pjoin
 from functools import wraps
