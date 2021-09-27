@@ -1,6 +1,16 @@
+import os
+
+if "SENTRY_DSN" in os.environ:
+    import sentry_sdk
+    from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
+
+    sentry_sdk.init(dsn=os.environ["SENTRY_DSN"])
+    has_sentry = True
+else:
+    has_sentry = False
+
 import quart.flask_patch  # noqa
 import json
-import os
 from os.path import join as pjoin
 from functools import wraps
 import datetime
@@ -42,12 +52,7 @@ app.config["SECRET_KEY"] = os.environ["SECRET_KEY"]
 app.config["UPLOAD_DIR"] = os.environ["UPLOAD_DIR"]
 
 
-if "SENTRY_DSN" in os.environ:
-    import sentry_sdk
-    from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
-
-    sentry_sdk.init(dsn=os.environ["SENTRY_DSN"])
-
+if has_sentry:
     # https://github.com/getsentry/sentry-python/issues/1135
     app.asgi_app = SentryAsgiMiddleware(app.asgi_app)._run_asgi3
 
