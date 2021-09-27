@@ -42,7 +42,7 @@
 <form
      id="selfassessform"
      method="post"
-     class="mv5 mt0 mw7 center-ns f3 tc mh2"
+     class="mv5 mt0 mw7 center-ns f3 tc mh2 relative"
      hx-post="{{ url_for("selfassess") }}"
      hx-target="#wordinfo"
      hx-swap="outerHTML"
@@ -68,7 +68,7 @@
         {{ legentry(4, "I probably know the word's meaning or am able to guess.") }}
         {{ legentry(5, "I absolutely know the word's meaning.") }}
     </section>
+    <div class="tr" id="progress">{% include "progress_snippet.html" %}</div>
     <img src="{{ url_for('static', filename='scale_explain.svg') }}">
-    <div class="tr" id="progress">{{ cur_word_idx }}/{{ total_words }}</div>
 </form>
 {% endblock %}

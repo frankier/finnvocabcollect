@@ -1,5 +1,5 @@
 from sqlalchemy import (
-    Column, Date, DateTime, Enum, ForeignKey, func, Integer, String, JSON
+    Column, Date, DateTime, Enum, ForeignKey, func, Integer, String, JSON, Boolean
 )
 from sqlalchemy.orm import declarative_base, relationship
 import enum
@@ -55,6 +55,7 @@ class Participant(Base):
     miniexam_accept_date = Column(DateTime)
     complete_deadline = Column(Date, nullable=False)
     next_response = Column(Integer, default=0)
+    undo = Column(Boolean, default=False)
 
     response_slots = relationship(
         "ResponseSlot",

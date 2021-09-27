@@ -334,7 +334,13 @@ async def selfassess():
         user.selfassess_start_date = datetime.datetime.now()
         await dbsess.commit()
     total_words = await get_total_words()
-    cur_word_idx = user.next_response
+
+    def effective_cur_word_idx():
+        if user.undo:
+            return user.next_response - 1
+        else:
+            return user.next_response
+
     if request.method == 'POST':
         form = await request.form
         batch_complete = int(form["complete"])
@@ -342,32 +348,39 @@ async def selfassess():
             batch_target = int(form["count"])
         else:
             batch_target = None
-        rating = int(form["rating"])
-        word_id = int(form["word_id"])
-        response_slot = (await dbsess.execute(
-            select(ResponseSlot)
-            .filter_by(
-                word_id=word_id,
-                participant_id=user.id,
+        if "undo" in form:
+            user.undo = True
+            await dbsess.commit()
+        else:
+            rating = int(form["rating"])
+            word_id = int(form["word_id"])
+            response_slot = (await dbsess.execute(
+                select(ResponseSlot)
+                .filter_by(
+                    word_id=word_id,
+                    participant_id=user.id,
+                )
+            )).scalars().first()
+            if response_slot.response_order != effective_cur_word_idx():
+                await flash(
+                    "You already gave a response for that word. "
+                    "The new response was discarded. "
+                    "Please use only a single tab/window."
+                )
+                return await ajax_redirect(url_for("overview"))
+            if user.undo:
+                user.undo = False
+            else:
+                batch_complete += 1
+                user.next_response += 1
+            dbsess.add(
+                Response(
+                    response_slot_id=response_slot.id,
+                    timestamp=datetime.datetime.now(),
+                    rating=rating,
+                )
             )
-        )).scalars().first()
-        if response_slot.response_order != cur_word_idx:
-            await flash(
-                "You already gave a response for that word. "
-                "The new response was discarded. "
-                "Please use only a single tab/window."
-            )
-            return await ajax_redirect(url_for("overview"))
-        batch_complete += 1
-        user.next_response += 1
-        dbsess.add(
-            Response(
-                response_slot_id=response_slot.id,
-                timestamp=datetime.datetime.now(),
-                rating=rating,
-            )
-        )
-        await dbsess.commit()
+            await dbsess.commit()
     else:
         batch_complete = 0
         if "count" in request.args:
@@ -381,7 +394,7 @@ async def selfassess():
         return await ajax_redirect(url_for("overview"))
     next_response_slot = (await dbsess.execute(
         select(ResponseSlot).where(
-            (ResponseSlot.response_order == user.next_response)
+            (ResponseSlot.response_order == effective_cur_word_idx())
             & (ResponseSlot.participant_id == user.id)
         ).options(joinedload(ResponseSlot.word))
     )).scalars().first()
@@ -408,10 +421,12 @@ async def selfassess():
         template,
         word=next_response_slot.word.word,
         word_id=next_response_slot.word.id,
-        cur_word_idx=cur_word_idx + 1,
+        cur_word_idx=effective_cur_word_idx() + 1,
         total_words=total_words,
         batch_complete=batch_complete,
         batch_target=batch_target,
+        undo=user.undo,
+        show_undo_button=not user.undo and effective_cur_word_idx() > 0,
     )
 
 

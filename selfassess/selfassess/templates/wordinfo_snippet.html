@@ -1,4 +1,12 @@
 <div id="wordinfo">
+    {% if show_undo_button %}
+        <button
+            _="on touchstart call me.click() then halt"
+            type="submit"
+            name="undo"
+            value="true"
+            class="absolute left-0 top-0">← undo</button>
+    {% endif %}
     <h3 class="tr ma0 normal f4 f3-ns">
         {{ batch_complete + 1 }}/
         {%- if batch_target is not none -%}
