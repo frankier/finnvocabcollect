@@ -32,24 +32,33 @@
         value="miniexaminput"
         hx-post="{{ url_for("track") }}"
         hx-trigger="input from:#miniexamform throttle:1s">
-    <div class="f4 lh-copy">
-        <p class="f3">
+    <div class="f4 lh-copy pv3 b--dashed mb5">
+        <p class="f3 pa1 ma4 tc">
             Please demonstrate your knowledge of the following words.
         </p>
         <ul>
-            <li>
-                Try to translate or define the word in your own language, English or Finnish &mdash; in that order of preference;
+            <li class="mv2">
+                For each word, try to translate or define the word into
+                <ol>
+                    <li>Your native language</li>
+                    <li>English or</li>
+                    <li>Finnish</li>
+                </ol>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&mdash; in that order of preference.
             </li>
-            <li>
-                If you cannot do this, instead give your best guess of the topic of the word i.e. completing the sentence "this word has something to do with&mldr;";
+            <li class="mv2">
+                If you cannot do this, instead give your best guess of the topic of the word i.e. completing the sentence "this word has something to do with&mldr;".
             </li>
-            <li>
-                If you are absolutely unable to attempt any of the other options then you may select that that you do not know the word;
-            </li>
-            <li>
-                Make sure to pick the correct option for the type of answer you provide!
+            <li class="mv2">
+                If you are absolutely unable to attempt any of the other options then you may select that that you do not know the word.
             </li>
         </ul>
+        <p class="f3 pa1 ma4 tc i">
+            For each word, pick the correct option for the type of answer you provide!
+        </p>
+        <p class="f3 pa1 ma4 tc i">
+            You can pick a different option for each word.
+        </p>
     </div>
     <ul class="list pa0 cols2-ns">
         {% for word in words %}
@@ -62,13 +71,17 @@
                 <span id="tick_{{ word.id }}" class="absolute right-0 top-0 ma2 f3 dark-green o-0">✓</span>
                 <div class="f3 mb1 tc">{{ word.word }}</div>
                 <input type="hidden" name="word_id" value="{{ word.id }}">
-                <select class="mv1" name="defn_type"
+                <select class="mv1" id="select_{{ word.id }}" name="defn_type" required
                 _="
                 on change or load
                 set the disabled of #text_{{ word.id}} to (my value is 'donotknow')
                 then set the required of #text_{{ word.id}} to (my value is not 'donotknow')
-                then send validityChange(valid:(#text_{{ word.id}}.validity.valid)) to parentElement of me 
+                then send validityChange(valid:me.validity.valid and (#text_{{ word.id}}.validity.valid)) to parentElement of me 
+
+                on input call me.setCustomValidity('')
+                on invalid call me.setCustomValidity('Please select the type of answer you are giving for this word')
                 ">
+                    <option></option>
                     {% for language in languages %}
                         <option value="definition_{{ language.language }}">{{ language.display_name() }} translation</option>
                     {% endfor %}
@@ -79,8 +92,9 @@
                 </select> 
                 <input class="mt1 border-box w-100" id="text_{{ word.id }}" name="response" required
                 _="
+                on change send validityChange(valid:(#select_{{ word.id }}.validity.valid) and me.validity.valid) to parentElement of me
+
                 on input call me.setCustomValidity('')
-                on change send validityChange(valid:me.validity.valid) to parentElement of me
                 on invalid call me.setCustomValidity('Please fill this in or select \'Do not know\'')
                 ">
             </li>
