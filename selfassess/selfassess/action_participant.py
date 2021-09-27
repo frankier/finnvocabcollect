@@ -18,9 +18,9 @@ from .utils import get_session
 @click.argument("email")
 def main(action, email):
     session = get_session()
-    participant = (
-        session.query(Participant).filter_by(email=email).scalars().first()
-    )
+    participant = session.execute(
+        session.query(Participant).filter_by(email=email)
+    ).scalars().first()
     setattr(
         participant,
         f"{action}_date",
