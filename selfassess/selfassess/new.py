@@ -19,18 +19,18 @@ EMAIL_TEMPLATE = Template("""
 Your participation in self-assessed Finnish vocabulary study / Osallistumisesi itsearvioituun suomen sanaston tutkimukseen
 ---
 
-(English below.) Tämä sähköposti ja verkkosivusto ovat saatavilla vain
-englanniksi, koska kaikki osallistujat vastasivat ymmärtävänsä englantia. Jos
-sinulla on vaikeuksia ymmärtää tutkimusta, voit aina saada apua vastaamalla
-tähän sähköpostiin valitsemallasi kielellä.
+(English below.) Koska kaikki osallistujat vastasivat ymmärtävänsä englantia,
+tämä sähköposti ja tutkimuksen verkkosivusto ovat saatavilla vain englanniksi.
+Jos sinulla on vaikeuksia ymmärtää kyselyä, voit pyytää ohjeita vastaamalla
+tähän sähköpostiin haluamallasi kielellä.
 
 / / /
 
 Dear prospective participant,
 
-Thanks for your interest in our study. We can confirm we would like you to
+Thank you for your interest in our study. We can confirm we would like you to
 participate in our study of vocabulary in learners of the Finnish language.
-This website gives the full details of the study:
+This website gives the full details:
 
 {{ link }}
 
