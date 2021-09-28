@@ -18,7 +18,8 @@ from functools import partial
 
 
 EMAIL_TEMPLATE = Template("""
-Your participation in self-assessed Finnish vocabulary study / Osallistumisesi itsearvioituun suomen sanaston tutkimukseen
+To: {{ email }}
+Subject: Your participation in self-assessed Finnish vocabulary study / Osallistumisesi itsearvioituun suomen sanaston tutkimukseen
 ---
 
 (English below.) Koska kaikki osallistujat vastasivat ymmärtävänsä englantia,
@@ -212,6 +213,7 @@ def main(email):
     loop = asyncio.get_event_loop()
     link = loop.run_until_complete(get_link())
     print(EMAIL_TEMPLATE.render(
+        email=email,
         link=link,
         accept_deadline=accept_deadline.strftime('%A %d/%m/%Y'),
         complete_deadline=complete_deadline.strftime('%A %d/%m/%Y'),
