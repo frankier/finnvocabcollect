@@ -22,17 +22,36 @@
     </table>
 {%- endmacro %}
 
-{% block body %}
-{% if wtform.errors %}
-    <ul>
-        {% for field_name, field_errors in wtform.errors|dictsort if field_errors %}
-            {% for error in field_errors %}
-                <li>{{ wtform[field_name].label }}: {{ error }}</li>
-            {% endfor %}
+{% macro language_row(language, extra="") %}
+    <tr {{ extra | safe }}>
+        {{ language.participant_id }}
+        <th class="normal tr h2">
+            {{ language.language }}
+        </th>
+        {% for opt in language.level %}
+            <td>{{ opt }}</td>
         {% endfor %}
-    </ul>
-{% endif %}
+    </tr>
+{%- endmacro %}
+
+{% macro form_errors(form) %}
+    {% if form.errors %}
+        <ul>
+            {% for field_name, field_errors in form.errors|dictsort if field_errors %}
+                {% for error in field_errors %}
+                    <li>
+                        {{ form[field_name].label }}:
+                        {{ error }}
+                    </li>
+                {% endfor %}
+            {% endfor %}
+        </ul>
+    {% endif %}
+{%- endmacro %}
+
+{% block body %}
 <form method="post" enctype="multipart/form-data" class="ma5 mw7 center f5">
+    {{ form_errors(wtform) }}
 
     <div class="flex items-center ma3">
         <label class="w5" for="{{ wtform.given_name.name }}">
@@ -48,6 +67,72 @@
             <span class="i f6">(Will be used for payment purposes.)</span>
         </label>
         {{ wtform.surname(class_="ml3") }}
+    </div>
+
+    <div class="flex items-center ma3">
+        <label class="w5" for="{{ wtform.given_name.name }}">
+            How long have you lived in Finland?<br>
+            <span class="i f6">Please give a whole number of years, subtracting any long periods away.</span>
+        </label>
+        {{ wtform.lived_in_finland(class_="ml3") }}
+    </div>
+
+    <div class="flex items-center ma3">
+        <label class="w5">
+            What languages other than Finnish do you know?
+<script>
+function incrName(name) {
+    var nameArr = name.split("-");
+    if (nameArr[0] == "languages" && nameArr.length >= 3) {
+        nameArr[1] = "" + (parseInt(nameArr[1]) + 1)
+        return nameArr.join("-");
+    } else {
+        return name;
+    }
+}
+
+function incrProp(elem, prop) {
+    var oldVal = elem.getAttribute(prop);
+    if (oldVal !== null) {
+        elem.setAttribute(prop, incrName(oldVal));
+    }
+}
+
+function incrTree(elem) {
+    incrProp(elem, "id");
+    incrProp(elem, "name");
+    Array.prototype.map.call(elem.children, incrTree);
+}
+</script>
+            <div class="i f6">
+                <a href="#" _="
+                on click
+                set extralangrow to #extralangrow
+                set langtable to #langtable
+                then set row to extralangrow.cloneNode(true)
+                then call row.removeAttribute('id')
+                then call incrTree(extralangrow)
+                then remove .dn from row
+                then call langtable.appendChild(row)
+                then call row.getElementsByTagName('input')[0].focus()
+                then halt
+                ">Click here to add a new language.</a> Leave a language blank to remove it.
+            </div>
+        </label>
+        <table class="tc ml3-ns fl" style="width: min-content">
+            <tbody id="langtable">
+                <tr>
+                    <th>Language</th>
+                    {% for choice in spare_language_form.level %}
+                        <th class="normal">{{ choice.label.text }}</th>
+                    {% endfor %}
+                </tr>
+                {% for language in language_forms %}
+                    {{ language_row(language) }}
+                {% endfor %}
+                {{ language_row(spare_language_form, 'class="dn" id="extralangrow"') }}
+            </tbody>
+        </table>
     </div>
 
     <div class="flex items-center-ns flex-column-reverse flex-row-ns mh3 mv4 mv3-ns">

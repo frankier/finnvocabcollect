@@ -26,6 +26,7 @@ from werkzeug.local import LocalProxy
 from .database import (
     Participant,
     ParticipantLanguage,
+    ParticipantResponseLanguage,
     Presentation,
     Word,
     ResponseSlot,
@@ -43,8 +44,9 @@ from sqlalchemy.orm import joinedload
 from sqlalchemy.ext.asyncio import async_scoped_session
 from .utils import get_async_session
 from .queries import recent_responses_for_participant
-from .forms import ParticipantForm
+from .forms import ParticipantForm, ParticipantLanguageForm, remove_empty_languages, group_languages
 import random
+from werkzeug.datastructures import ImmutableMultiDict
 
 app = Quart(__name__)
 app.config["SERVER_NAME"] = os.environ["SERVER_NAME"]
@@ -119,6 +121,7 @@ async def inject_user():
     else:
         accept_deadline = None
     return dict(
+        participant_id=user.id,
         email=user.email,
         accept_deadline=accept_deadline,
         deadline=user.complete_deadline
@@ -242,13 +245,58 @@ async def proof():
     if user.proof is not None:
         await flash("Proof has already been uploaded")
         return redirect(url_for("overview"))
-    form = await request.form
-    wtform = ParticipantForm(formdata=form, obj=user)
+    formdata = await request.form
+    wtform = ParticipantForm(formdata=formdata, obj=user)
+    language_forms = []
+    languages = await dbsess().run_sync(lambda _: user.languages)
+    for idx, language in enumerate(languages):
+        langform = ParticipantLanguageForm(
+            formdata=formdata,
+            obj=language,
+            prefix=f"languages-{idx}-"
+        )
+        language_forms.append(langform)
+    spare_language_form = ParticipantLanguageForm(
+        prefix=f"languages-{idx + 1}-"
+    )
+
+    async def render_form():
+        return await render_template(
+            "proof.html",
+            wtform=wtform,
+            language_forms=language_forms,
+            spare_language_form=spare_language_form
+        )
+    # all((form.validate() for form in language_forms))
     if request.method == 'POST' and wtform.validate():
         # Save most fields
         wtform.populate_obj(user)
-        print(type(user.proof_type), repr(user.proof_type))
-        print(type(user.proof_age), repr(user.proof_age))
+        await dbsess.commit()
+        # Do not know why I have to do this...
+        languages_formdata = ImmutableMultiDict(
+            ((k, v) for k, v in formdata.items(multi=True) if k.startswith("languages-")),
+        )
+        languages_formdata = remove_empty_languages(languages_formdata)
+        grouped = group_languages(languages_formdata)
+        for lang_formdata in grouped.values():
+            try:
+                language = langcodes.find(lang_formdata["language"])
+            except LookupError:
+                await flash("Unknown language " + lang_formdata["language"])
+                await dbsess.rollback()
+                return await render_form()
+            if "level" not in lang_formdata:
+                await flash("Please give a CEFR level estimate for " + lang_formdata["language"])
+                await dbsess.rollback()
+                return await render_form()
+            dbsess.add(
+                ParticipantResponseLanguage(
+                    participant=user,
+                    language=language.language,
+                    level=int(lang_formdata["level"]),
+                )
+            )
+        await dbsess.commit()
         # Deal with file manually
         files = await request.files
         fobj = files["proof"]
@@ -256,7 +304,8 @@ async def proof():
         ext = plain_filename.rsplit(".", 1)[-1].lower()
         if ext not in ["png", "jpg", "jpeg"]:
             await flash("Filename must end with .png, .jpg or .jpeg")
-            return redirect(url_for("proof"))
+            await dbsess.rollback()
+            return await render_form()
         filename = secure_filename(user.token + "_" + plain_filename)
         os.makedirs(app.config['UPLOAD_DIR'], exist_ok=True)
         await fobj.save(pjoin(app.config['UPLOAD_DIR'], filename))
@@ -272,10 +321,7 @@ async def proof():
         )
         return redirect(url_for("overview"))
     else:
-        return await render_template(
-            "proof.html",
-            wtform=wtform
-        )
+        return await render_form()
 
 
 async def ajax_redirect(url):
@@ -436,7 +482,7 @@ async def selfassess():
 
 
 def native_language(session, user):
-    return user.languages.filter(ParticipantLanguage.c.level == "native").first()
+    return user.languages.filter(ParticipantLanguage.c.primary_native).first()
 
 
 @app.route("/miniexam", methods=['GET', 'POST'])

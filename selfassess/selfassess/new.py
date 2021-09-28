@@ -1,4 +1,5 @@
 import click
+import traceback
 import shortuuid
 from .utils import get_session
 from jinja2 import Template
@@ -12,7 +13,8 @@ import asyncio
 from sqlalchemy import select
 import random
 import langcodes
-from .quali import CEFR_LEVELS, CEFR_SKILLS
+from .quali import CEFR_LEVELS_NATIVE, CEFR_SKILLS
+from functools import partial
 
 
 EMAIL_TEMPLATE = Template("""
@@ -56,38 +58,62 @@ University of Jyväskylä
 """.strip())
 
 
+def convert_cefr(level, max_level=7, allow_none=False):
+    level = level.strip()
+    if allow_none and level == "none":
+        return None
+    if level in CEFR_LEVELS_NATIVE:
+        level = CEFR_LEVELS_NATIVE.index(level) + 1
+    else:
+        level = int(level)
+    if level < 1 or level > max_level:
+        raise ValueError(f"Level {level} out of range 1-{max_level}")
+    return level
+
+
+def convert_opt_lang(lang):
+    lang = lang.strip().lower()
+    if not lang:
+        return
+    return langcodes.get(lang)
+
+
+def convert_lang(lang):
+    return langcodes.get(lang.strip().lower())
+
+
+def repeat_input(prompt, process):
+    while 1:
+        result = input(prompt + " > ")
+        try:
+            proc_result = process(result)
+        except Exception:
+            traceback.print_exc()
+        else:
+            return proc_result
+
+
 def prompts(email):
-    native_lang = input("Native language (iso alpha2 code) > ")
-    native_lang_obj = langcodes.get(native_lang)
+    years_in_finland = repeat_input("Years in Finland", int)
+    native_lang_obj = repeat_input("Native language (iso alpha2 code)", convert_lang)
     other_langs = []
     while 1:
-        other_lang = input(
-            "Other language (iso alpha2 code or blank to finish) > "
-        ).strip().lower()
-        if not other_lang:
+        other_lang_obj = repeat_input(
+            "Other language (iso alpha2 code or blank to finish)",
+            convert_opt_lang
+        )
+        if not other_lang_obj:
             break
-        other_lang_obj = langcodes.get(other_lang)
-        while 1:
-            cefr = input("CEFR level > ").strip().lower()
-            if cefr not in CEFR_LEVELS:
-                print(f"{cefr} not in {CEFR_LEVELS!r} -- try again!")
-            else:
-                break
+        cefr = repeat_input("CEFR level (a1-c2/native/none or 1-7)", partial(convert_cefr, allow_none=True))
         other_langs.append((other_lang_obj, cefr))
-    while 1:
-        proof_type = input(
-            "Proof type (yki_intermediate/yki_advanced/other) > "
-        )
-        if proof_type in ProofType.__members__:
-            proof_type = ProofType[proof_type]
-            break
-    while 1:
-        proof_age = input(
-            "Proof age (lt1/lt3/lt5/gte5) > "
-        )
-        if proof_age in ProofAge.__members__:
-            proof_age = ProofAge[proof_age]
-            break
+    proof_type = repeat_input(
+        "Proof type (yki_intermediate/yki_advanced/other)",
+        lambda k: ProofType[k]
+    )
+    proof_age = repeat_input(
+        "Proof age (lt1/lt3/lt5/gte5)",
+        lambda k: ProofAge[k]
+    )
     text_on_proof = []
     while 1:
         inp = input("Text on proof > ")
@@ -98,18 +124,11 @@ def prompts(email):
     cefrs = []
     for type in ("proof", "selfassess"):
         for skill in CEFR_SKILLS:
-            while 1:
-                level = input(f"{type} {skill} > ")
-                if level in CEFR_LEVELS:
-                    level = CEFR_LEVELS.index(level) + 1
-                else:
-                    level = int(level)
-                    if level < 1 or level > 6:
-                        continue
-                break
+            level = repeat_input(f"{type} {skill} (a1-c2 or 1-6)", partial(convert_cefr, max_level=6))
             cefrs.append((type, skill, level))
     print()
     print("Email:", email)
+    print("Years in Finland", years_in_finland)
     print("Native language:", native_lang_obj.display_name())
     for other_lang, cefr in other_langs:
         print("Other language:", other_lang.display_name(), cefr)
@@ -118,7 +137,7 @@ def prompts(email):
     print("Text on proof:")
     print(text_on_proof)
     for type, skill, level in cefrs:
-        print(type.title(), skill.title() + ":", "{}/{}".format(CEFR_LEVELS[level - 1].upper(), level))
+        print(type.title(), skill.title() + ":", "{}/{}".format(CEFR_LEVELS_NATIVE[level - 1].upper(), level))
     print()
     while 1:
         resp = input("Confirm? (y/n) > ").strip().lower()
@@ -128,13 +147,13 @@ def prompts(email):
         elif resp == "y":
             print("Inserting")
             break
-    return native_lang_obj, other_langs, proof_type, proof_age, text_on_proof, cefrs
+    return years_in_finland, native_lang_obj, other_langs, proof_type, proof_age, text_on_proof, cefrs
 
 
 @click.command()
 @click.argument("email")
 def main(email):
-    native_lang, other_langs, proof_type, proof_age, text_on_proof, cefrs = prompts(email)
+    years_in_finland, native_lang, other_langs, proof_type, proof_age, text_on_proof, cefrs = prompts(email)
     session = get_session()
     token = shortuuid.uuid()
     create_datetime = datetime.datetime.now()
@@ -155,6 +174,7 @@ def main(email):
             proof_type=proof_type,
             proof_age=proof_age,
             text_on_proof=text_on_proof,
+            lived_in_finland=years_in_finland,
             **{
                 f"cefr_{type}_{skill}": level
                 for type, skill, level in cefrs
@@ -164,7 +184,8 @@ def main(email):
         participant_language = ParticipantLanguage(
             participant=participant,
             language=native_lang.language,
-            level="native",
+            level=7,
+            primary_native=True
         )
         session.add(participant_language)
         for other_lang, cefr in other_langs:

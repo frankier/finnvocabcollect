@@ -37,7 +37,7 @@ def setup_duckdb(db_out):
     create table participant_language (
         participant_id int,
         language varchar,
-        level varchar
+        level int
     );
     create table selfassess_session (
         id int primary key,

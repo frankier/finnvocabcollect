@@ -3,8 +3,10 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import declarative_base, relationship
 import enum
-from .quali import ProofType, ProofAge, CEFR_LEVELS
+from .quali import ProofType, ProofAge, CEFR_LEVELS, CEFR_LEVELS_NATIVE
 from wtforms import RadioField, TextAreaField
+from wtforms.validators import InputRequired
+from wtforms.widgets.html5 import NumberInput
 
 
 Base = declarative_base()
@@ -15,6 +17,17 @@ CEFR_INFO = {
             f"CEFR {cefr.upper()} / YKI {yki}"
             for yki, cefr
             in enumerate(CEFR_LEVELS, start=1)
+        ),
+        start=1
+    ))
+}
+CEFR_NATIVE_INFO = {
+    "form_field_class": RadioField,
+    "choices": list(enumerate(
+        (
+            cefr.title()
+            for cefr
+            in CEFR_LEVELS_NATIVE
         ),
         start=1
     ))
@@ -31,13 +44,14 @@ class Participant(Base):
     accept_deadline = Column(Date, nullable=False)
     withdraw_date = Column(DateTime)
     email = Column(String, unique=True, nullable=False)
-    given_name = Column(String, info={"label": "Given name"})
-    surname = Column(String, info={"label": "Surname"})
+    given_name = Column(String, info={"label": "Given name", 'validators': InputRequired()})
+    surname = Column(String, info={"label": "Surname", 'validators': InputRequired()})
     proof = Column(String)
     proof_upload_date = Column(DateTime)
     proof_accept_date = Column(DateTime)
     proof_type = Column(Enum(ProofType), nullable=False, info={"label": "Type of proof"})
     proof_age = Column(Enum(ProofAge), nullable=False, info={"label": "Age of proof"})
+    lived_in_finland = Column(Integer, nullable=False, info={"label": "How long have you lived in Finland?", 'widget': NumberInput(min=0)}, server_default="0")
     cefr_proof_speaking = Column(Integer, info=CEFR_INFO)
     cefr_proof_writing = Column(Integer, info=CEFR_INFO)
     cefr_proof_listening_comprehension = Column(Integer, info=CEFR_INFO)
@@ -75,6 +89,10 @@ class Participant(Base):
         "ParticipantLanguage",
         back_populates="participant"
     )
+    response_languages = relationship(
+        "ParticipantResponseLanguage",
+        back_populates="participant"
+    )
 
 
 class ParticipantLanguage(Base):
@@ -83,9 +101,21 @@ class ParticipantLanguage(Base):
     id = Column(Integer, primary_key=True)
     participant_id = Column(Integer, ForeignKey('participant.id'), nullable=False)
     language = Column(String, nullable=False)
-    level = Column(String, nullable=False)
+    level = Column(Integer, nullable=True, info=CEFR_NATIVE_INFO, default=1)
+    primary_native = Column(Boolean, default=False)
 
     participant = relationship("Participant", back_populates="languages")
+
+
+class ParticipantResponseLanguage(Base):
+    __tablename__ = "participant_response_language"
+
+    id = Column(Integer, primary_key=True)
+    participant_id = Column(Integer, ForeignKey('participant.id'), nullable=False)
+    language = Column(String, nullable=False)
+    level = Column(Integer, nullable=False, info=CEFR_NATIVE_INFO, default=1)
+
+    participant = relationship("Participant", back_populates="response_languages")
 
 
 class Word(Base):
