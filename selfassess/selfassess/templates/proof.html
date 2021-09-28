@@ -26,7 +26,7 @@
     <tr {{ extra | safe }}>
         {{ language.participant_id }}
         <th class="normal tr h2">
-            {{ language.language }}
+            {{ language.language(size=8) }}
         </th>
         {% for opt in language.level %}
             <td>{{ opt }}</td>
@@ -69,16 +69,16 @@
         {{ wtform.surname(class_="ml3") }}
     </div>
 
-    <div class="flex items-center ma3">
-        <label class="w5" for="{{ wtform.given_name.name }}">
+    <div class="flex items-center-ns flex-column flex-row-ns mh3 mv4 mv3-ns">
+        <label class="w5-ns mb2 mb0-ns" for="{{ wtform.given_name.name }}">
             How long have you lived in Finland?<br>
             <span class="i f6">Please give a whole number of years, subtracting any long periods away.</span>
         </label>
         {{ wtform.lived_in_finland(class_="ml3") }}
     </div>
 
-    <div class="flex items-center ma3">
-        <label class="w5">
+    <div class="flex items-center-ns flex-column flex-row-ns mh3 mv4 mv3-ns">
+        <label class="w5-ns mb2 mb0-ns">
             What languages other than Finnish do you know?
 <script>
 function incrName(name) {
