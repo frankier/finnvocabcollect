@@ -547,12 +547,7 @@ async def miniexam():
                 MiniexamSlot.miniexam_order
             )
         )).scalars()
-        native_lang = (await dbsess.execute(
-            select(ParticipantLanguage.language).where(
-                (ParticipantLanguage.level == "native")
-                & (ParticipantLanguage.participant_id == user.id)
-            )
-        )).scalars().first()
+        native_lang = await dbsess().run_sync(native_language, user=user)
         languages = [langcodes.get(native_lang)]
         if native_lang != "en":
             languages.append(langcodes.get("en"))
