@@ -1,4 +1,5 @@
 import click
+import datetime
 
 from .database import Participant
 from .utils import get_session
@@ -9,7 +10,7 @@ from .utils import get_session
 def main(email):
     session = get_session()
     participant = (
-        session.query(Participant).filter(email=email).scalars().first()
+        session.query(Participant).filter_by(email=email).scalars().first()
     )
     for miniexam_slot in participant.miniexam_slots:
         resp = miniexam_slot.responses[-1]
@@ -25,6 +26,8 @@ def main(email):
                 resp.mark = mark
                 session.commit()
                 break
+    participant.miniexam_accept_date = datetime.datatime.now()
+    session.commit()
 
 
 if __name__ == "__main__":

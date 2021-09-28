@@ -11,7 +11,8 @@ from .utils import get_session
     type=click.Choice([
         "proof_accept",
         "selfassess_accept",
-        "miniexam_accept",
+        # Moved to selfassess.mark
+        #"miniexam_accept",
         "withdraw"
     ])
 )
