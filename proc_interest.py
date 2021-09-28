@@ -96,6 +96,21 @@ def main(inf):
     print(df.groupby(["hasenglish"]).size().reset_index(name="counts"))
     print(df[~df["hasenglish"]])
 
+    df_cand = df[
+        df["nativelangcode"].isin(("en", "ru", "hu"))
+        & df["selfcefr"].isin(["B1", "B2", "C1"])
+    ]
+
+    for name, group in df_cand.groupby(["nativelangcode", "selfcefr"]):
+        print()
+        print()
+        print("** ", name, "**")
+        for _, row in group.iterrows():
+            print()
+            for k, v in row.iteritems():
+                print(k + ":")
+                print("\t", v)
+
 
 if __name__ == "__main__":
     main()
