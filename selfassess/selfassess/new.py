@@ -43,7 +43,7 @@ the above link with others.
 
 You can find further details about the study and confirm your participation
 using the website. If you want to participate, please do so and begin the
-self-assessment within 7 days (by {{ accept_deadline }}) or we will assume you
+self-assessment within 4 days (by {{ accept_deadline }}) or we will assume you
 no longer wish to participate in the study and remove you. You must complete
 the whole study within 21 days (by {{ complete_deadline }}).
 
@@ -159,7 +159,7 @@ def main(email):
     token = shortuuid.uuid()
     create_datetime = datetime.datetime.now()
     accept_deadline = (
-        create_datetime + datetime.timedelta(weeks=1)
+        create_datetime + datetime.timedelta(days=4)
     ).date()
     complete_deadline = (
         create_datetime + datetime.timedelta(weeks=3)
