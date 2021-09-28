@@ -13,7 +13,8 @@ RUN python3 -m pip install --upgrade \
     setuptools==50.3.2 \
     poetry==1.1.4 \
     poetry-core==1.0.0 \
-    hypercorn
+    hypercorn \
+    sqlite3
 
 RUN ln -sf /usr/bin/python3.7 /usr/bin/python
 
