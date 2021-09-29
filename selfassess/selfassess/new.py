@@ -43,12 +43,15 @@ the above link with others.
 
 You can find further details about the study and confirm your participation
 using the website. If you want to participate, please do so and begin the
-self-assessment within {{ begin_days }} days (by {{ accept_deadline }}) or we will assume you
-no longer wish to participate in the study and remove you. You must complete
-the whole study within 21 days (by {{ complete_deadline }}).
+self-assessment within {{ begin_days }} days (by {{ accept_deadline }}) or we
+will assume you no longer wish to participate in the study and remove you. You
+must complete the whole study within 21 days (by {{ complete_deadline }}).
 
 If you already know that you do not want to participate, please let me know by
 replying to this email and you will be withdrawn and your information expunged.
+
+You can also reply to this email if you encounter any problems completing the
+study.
 
 Best regards,
 
