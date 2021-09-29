@@ -209,7 +209,12 @@ def main(email):
 
     async def get_link():
         async with app.app_context():
-            return url_for("start", token=token)
+            return url_for(
+                "start",
+                token=token,
+                _external=True,
+                _scheme="https" if not app.debug else "http"
+            )
     loop = asyncio.get_event_loop()
     link = loop.run_until_complete(get_link())
     print(EMAIL_TEMPLATE.render(

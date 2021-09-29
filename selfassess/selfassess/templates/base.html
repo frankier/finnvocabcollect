@@ -1,11 +1,18 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <meta name="robots" content="noindex">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://unpkg.com/tachyons@4.12.0/css/tachyons.min.css"/>
+    <link rel="manifest" href="{{ url_for('manifest') }}">
     <!--  https://unpkg.com/htmx.org@1.5.0/dist/htmx.js -->
     <script src="{{ url_for('static', filename='htmx.js') }}"></script>
     <script src="https://unpkg.com/hyperscript.org@0.8.1"></script>
+    <script>
+        if('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('{{ url_for('static', filename='sw.js') }}');
+        };
+    </script>
     <title>Finnish vocabulary self-assessment</title>
   </head>
   <body>

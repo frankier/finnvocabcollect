@@ -5,3 +5,4 @@ export ASYNC_DATABASE_URL='sqlite+aiosqlite:///db.db'
 export SERVER_NAME='localhost:5000'
 export SECRET_KEY='thisisinsecuredonotuseinproduction'
 export UPLOAD_DIR=uploads
+export CONTACT_EMAIL=thestudyadmin@example.com

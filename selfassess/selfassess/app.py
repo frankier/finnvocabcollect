@@ -52,6 +52,7 @@ app = Quart(__name__)
 app.config["SERVER_NAME"] = os.environ["SERVER_NAME"]
 app.config["SECRET_KEY"] = os.environ["SECRET_KEY"]
 app.config["UPLOAD_DIR"] = os.environ["UPLOAD_DIR"]
+app.config["CONTACT_EMAIL"] = os.environ["CONTACT_EMAIL"]
 
 
 if has_sentry:
@@ -113,18 +114,23 @@ def user_required(func):
 
 @app.context_processor
 async def inject_user():
+    result = dict(
+        contact_email=app.config["CONTACT_EMAIL"]
+    )
     user = await current_user
     if user is None:
-        return {}
+        return result
     if user.selfassess_start_date is None:
         accept_deadline = user.accept_deadline
     else:
         accept_deadline = None
     return dict(
+        **result,
         participant_id=user.id,
         email=user.email,
         accept_deadline=accept_deadline,
-        deadline=user.complete_deadline
+        deadline=user.complete_deadline,
+        token=user.token,
     )
 
 
@@ -197,6 +203,11 @@ async def withdrawn():
     return await render_template("withdrawn.html")
 
 
+@app.route("/about")
+async def about():
+    return await render_template("about.html")
+
+
 @app.route("/terms", methods=['GET', 'POST'])
 @user_required
 async def terms():
@@ -236,6 +247,12 @@ async def terms():
             return redirect(url_for("terms"))
     else:
         return await render_template("terms.html")
+
+
+@app.route("/manifest.webmanifest")
+@user_required
+async def manifest():
+    return await render_template("manifest.webmanifest")
 
 
 @app.route("/proof", methods=['GET', 'POST'])
@@ -580,6 +597,11 @@ async def track():
     add_event(user, event_type)
     await dbsess.commit()
     return "yep"
+
+
+@app.errorhandler(401)
+async def forbidden(e):
+    return (await render_template('401.html')), 401
 
 
 @app.teardown_request

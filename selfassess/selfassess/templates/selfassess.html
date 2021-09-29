@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "base_return.html" %}
 
 {% macro box(number) -%}
 
@@ -21,10 +21,6 @@
         </div>
     </div>
 {%- endmacro %}
-
-{% block topbar %}
-    <h3 class="normal mt0 mb2 mb0-ns"><a href="/">← Return to study overview</a></h3>
-{% endblock %}
 
 {% block body %}
 <input

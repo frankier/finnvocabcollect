@@ -25,11 +25,13 @@
                     {{ box("cross") }}
                 {% endif %}
                 <div>
-                    {% if not accepted %}
+                    {% if accepted %}
+                        <a href="{{ url_for("about") }}">
+                            Refer to the overview of the study here.
+                        </a>
+                    {% else %}
                         <a href="{{ url_for("terms") }}">
-                    {% endif %}
-                        Learn about the study and read its terms
-                    {% if not accepted %}
+                            Learn about the study and read its terms
                         </a>
                     {% endif %}
                 </div>
