@@ -40,5 +40,5 @@ def recent_responses_for_participant(participant):
 def native_language(user):
     return select(ParticipantLanguage).filter(
         ParticipantLanguage.primary_native.is_(True) &
-        ParticipantLanguage.participant_id == user.id
+        (ParticipantLanguage.participant_id == user.id)
     )
