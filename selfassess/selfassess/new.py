@@ -153,13 +153,14 @@ def prompts(email):
 
 @click.command()
 @click.argument("email")
-def main(email):
+@click.option("--days", type=int, default=4)
+def main(email, days):
     years_in_finland, native_lang, other_langs, proof_type, proof_age, text_on_proof, cefrs = prompts(email)
     session = get_session()
     token = shortuuid.uuid()
     create_datetime = datetime.datetime.now()
     accept_deadline = (
-        create_datetime + datetime.timedelta(days=4)
+        create_datetime + datetime.timedelta(days=days)
     ).date()
     complete_deadline = (
         create_datetime + datetime.timedelta(weeks=3)
