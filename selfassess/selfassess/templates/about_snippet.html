@@ -85,49 +85,4 @@
         10 minute screen break every hour.
     </p>
 
-    <h2>Returning to the study website</h2>
-
-    <p>
-        The link you received in your email acts as your username and password
-        to login to the study. Please keep it safe. If you like, you can also:
-    </p>
-
-    <ul>
-        <li>
-            Recommended on a desktop/laptop computer: <a href="{{ url_for('start', token=token, _external=True) }}">right click this link and save it as a bookmark</a>.
-        </li>
-        <li>
-            Recommended on Android/iOS: <a id="addtohomescreen" href="#">click here to add to home screen</a>.
-        </li>
-    </ul>
-
 </section>
-<script>
-let deferredPrompt = null;
-const addBtn = document.getElementById('addtohomescreen');
-
-addBtn.addEventListener('click', (e) => {
-  e.preventDefault();
-  if (deferredPrompt === "spent") {
-    location.reload();
-  } else if (deferredPrompt === null) {
-    alert('Add to home screen unsupported on this device');
-  } else {
-    deferredPrompt.prompt();
-    deferredPrompt.userChoice.then((choiceResult) => {
-      if (choiceResult.outcome === 'accepted') {
-        alert('Added to home screen');
-      } else {
-        alert('Failed to add to home screen');
-      }
-      deferredPrompt = "spent";
-    });
-  }
-});
-
-window.addEventListener('beforeinstallprompt', (e) => {
-  // Prevent Chrome 67 and earlier from automatically showing the prompt
-  e.preventDefault();
-  deferredPrompt = e;
-});
-</script>

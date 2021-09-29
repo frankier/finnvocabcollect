@@ -19,7 +19,7 @@ import langcodes
 
 from quart import (
     _request_ctx_stack, Quart, request, session, abort, redirect,
-    url_for, flash, make_response
+    url_for, flash, make_response, Response as QuartResponse
 )
 from quart.templating import render_template
 from werkzeug.local import LocalProxy
@@ -131,6 +131,7 @@ async def inject_user():
         accept_deadline=accept_deadline,
         deadline=user.complete_deadline,
         token=user.token,
+        overview_link=url_for("overview", token=user.token)
     )
 
 
@@ -142,7 +143,7 @@ async def start(token):
     if participant.withdraw_date is not None:
         return redirect(url_for("withdrawn"))
     session[USER_SESSION_KEY] = token
-    return redirect(url_for("overview"))
+    return redirect(url_for("overview", token=token))
 
 
 _total_words = None
@@ -158,9 +159,13 @@ async def get_total_words():
 
 
 @app.route("/")
-@user_required
 async def overview():
     user = await current_user
+    if user is None:
+        if "token" in request.args:
+            return redirect(url_for("start", token=request.args["token"]))
+        else:
+            abort(401)
     proof_uploaded = user.proof_upload_date is not None
     proof_accepted = user.proof_accept_date is not None
     if proof_uploaded and proof_accepted:
@@ -253,7 +258,10 @@ async def terms():
 @app.route("/manifest.webmanifest")
 @user_required
 async def manifest():
-    return await render_template("manifest.webmanifest")
+    return QuartResponse(
+        (await render_template("manifest.webmanifest")),
+        mimetype="application/manifest+json"
+    )
 
 
 @app.route("/proof", methods=['GET', 'POST'])
