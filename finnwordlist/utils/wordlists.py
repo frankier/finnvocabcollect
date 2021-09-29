@@ -22,24 +22,22 @@ PRODUCTIVE_DERIVATIONS = [
 ]
 
 
-def read_compound_list():
+def read_word_list(path):
     res = set()
-    with open(COMPOUND_LIST) as compounds:
-        for line in compounds:
+    with open(path) as inf:
+        for line in inf:
             word = line.strip()
             if word:
                 res.add(word.lower())
     return res
 
 
+def read_compound_list():
+    return read_word_list(COMPOUND_LIST)
+
+
 def read_bad_list():
-    res = set()
-    with open(BAD_CATEGORIES) as badcatlist:
-        for line in badcatlist:
-            word = line.strip()
-            if word:
-                res.add(word)
-    return res
+    return read_word_list(BAD_CATEGORIES)
 
 
 def read_nss(no_compound=False):
