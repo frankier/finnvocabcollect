@@ -204,6 +204,7 @@ async def withdrawn():
 
 
 @app.route("/about")
+@user_required
 async def about():
     return await render_template("about.html")
 
