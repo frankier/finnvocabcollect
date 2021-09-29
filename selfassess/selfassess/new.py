@@ -43,7 +43,7 @@ the above link with others.
 
 You can find further details about the study and confirm your participation
 using the website. If you want to participate, please do so and begin the
-self-assessment within 4 days (by {{ accept_deadline }}) or we will assume you
+self-assessment within {{ begin_days }} days (by {{ accept_deadline }}) or we will assume you
 no longer wish to participate in the study and remove you. You must complete
 the whole study within 21 days (by {{ complete_deadline }}).
 
@@ -171,6 +171,7 @@ def main(email, days):
             create_date=create_datetime,
             accept_date=None,
             email=email,
+            begin_days=days,
             accept_deadline=accept_deadline,
             complete_deadline=complete_deadline,
             proof_type=proof_type,
