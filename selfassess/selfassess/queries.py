@@ -1,5 +1,5 @@
 import quart.flask_patch  # noqa
-from .database import Response, ResponseSlot
+from .database import Response, ResponseSlot, ParticipantLanguage
 from sqlalchemy import select, desc, func
 from sqlalchemy.orm import contains_eager, joinedload, aliased
 
@@ -34,4 +34,11 @@ def recent_responses_for_participant(participant):
         .options(contains_eager(aliased_responses.slot))
         .filter(ResponseSlot.participant_id == participant.id)
         .filter(subq.c.rownb == 1)
+    )
+
+
+def native_language(user):
+    return select(ParticipantLanguage).filter(
+        ParticipantLanguage.primary_native.is_(True) &
+        ParticipantLanguage.participant_id == user.id
     )

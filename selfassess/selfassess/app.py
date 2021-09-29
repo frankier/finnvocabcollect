@@ -43,7 +43,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import joinedload
 from sqlalchemy.ext.asyncio import async_scoped_session
 from .utils import get_async_session
-from .queries import recent_responses_for_participant
+from .queries import recent_responses_for_participant, native_language
 from .forms import ParticipantForm, ParticipantLanguageForm, remove_empty_languages, group_languages
 import random
 from werkzeug.datastructures import ImmutableMultiDict
@@ -482,10 +482,6 @@ async def selfassess():
     )
 
 
-def native_language(session, user):
-    return user.languages.filter(ParticipantLanguage.c.primary_native).first()
-
-
 @app.route("/miniexam", methods=['GET', 'POST'])
 @user_required
 async def miniexam():
@@ -548,7 +544,8 @@ async def miniexam():
                 MiniexamSlot.miniexam_order
             )
         )).scalars()
-        native_lang = await dbsess().run_sync(native_language, user=user)
+        native_lang_res = await dbsess.execute(native_language(user))
+        native_lang = native_lang_res.scalars().first().language
         languages = [langcodes.get(native_lang)]
         if native_lang != "en":
             languages.append(langcodes.get("en"))
