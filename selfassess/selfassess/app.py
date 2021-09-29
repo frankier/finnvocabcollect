@@ -241,6 +241,7 @@ async def terms():
 @app.route("/proof", methods=['GET', 'POST'])
 @user_required
 async def proof():
+    request.body_timeout = 600
     user = await current_user
     if user.proof is not None:
         await flash("Proof has already been uploaded")
