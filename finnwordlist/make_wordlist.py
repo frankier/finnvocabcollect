@@ -16,9 +16,6 @@ from finnwordlist.multicorpusfreqs import (
 from finnwordlist.utils.stats import kde_mode
 
 
-random.seed(0)
-
-
 TARGET_LENGTH = 12000
 # Filter out country names
 # Filter out anything else which is not usually shown in its citation form?
@@ -75,7 +72,7 @@ def mode_freq(freqs):
     return mode
 
 
-def fill_freq_range(freqs_df, current_wordlist):
+def fill_freq_range(freqs_df, current_wordlist, seed=42):
     freqs_df["max_tmp"] = freqs_df[REL_FREQ_COLS].max(axis=1)
     freq_cols = [*REL_FREQ_COLS, "max_tmp"]
     in_wordlist = freqs_df["lemma"].isin(current_wordlist)
@@ -99,7 +96,8 @@ def fill_freq_range(freqs_df, current_wordlist):
             buckets[idx, bucket_idx] += 1
     print("Buckets!")
     print(buckets)
-    cand_freqs = freqs_df[~in_wordlist].sample(frac=1)
+    cand_freqs = freqs_df[~in_wordlist].sample(frac=1, random_state=42)
+    available_mask = np.ones((cand_freqs.shape[0],), dtype=np.bool_)
     while len(current_wordlist) < TARGET_LENGTH:
         index = np.unravel_index([np.argmin(buckets)], buckets.shape)
         freq_col_idx = index[0][0]
@@ -108,16 +106,20 @@ def fill_freq_range(freqs_df, current_wordlist):
         freq_col = freq_cols[freq_col_idx]
         cur_cands = (
             (cand_freqs[freq_col] >= ends[bucket_idx]) &
-            (cand_freqs[freq_col] < ends[bucket_idx + 1])
+            (cand_freqs[freq_col] < ends[bucket_idx + 1]) &
+            available_mask
         )
-        if not any(cur_cands):
+        cur_cands_ilocs = np.nonzero(cur_cands.to_numpy())[0]
+        if len(cur_cands_ilocs) == 0:
             print("Impossible bucket", freq_col_idx, bucket_idx)
             if buckets[freq_col_idx, bucket_idx] == float("inf"):
                 print("All buckets impossible. Cannot continue")
                 sys.exit(-1)
             buckets[freq_col_idx, bucket_idx] = float("inf")
             continue
-        cur_cand_idx = cand_freqs.index[cur_cands][0]
+        cur_cand_iloc = cur_cands_ilocs[0]
+        available_mask[cur_cand_iloc] = 0
+        cur_cand_idx = cand_freqs.index[cur_cand_iloc]
         # Add to all
         for other_freq_col_idx, (other_freq_col, other_max_bucket) in enumerate(zip(freq_cols, max_buckets)):
             other_rel = cand_freqs.at[cur_cand_idx, other_freq_col]
@@ -125,8 +127,8 @@ def fill_freq_range(freqs_df, current_wordlist):
             if other_bucket_idx is None:
                 continue
             buckets[other_freq_col_idx, other_bucket_idx] += 1
-        current_wordlist.append(cand_freqs.at[cur_cand_idx, "lemma"])
-        cand_freqs.drop(index=cur_cand_idx, inplace=True)
+        cur_lemma = cand_freqs.at[cur_cand_idx, "lemma"]
+        current_wordlist.append(cur_lemma)
     print("Buckets end!")
     print(buckets)
     freqs_df.drop(columns="max_tmp", inplace=True)
@@ -136,7 +138,10 @@ def fill_freq_range(freqs_df, current_wordlist):
 @click.argument("inf")
 @click.argument("derivtrim_inf")
 @click.argument("outf")
-def main(inf, derivtrim_inf, outf):
+@click.option("--seed", type=int, default=42)
+def main(inf, derivtrim_inf, outf, seed):
+    random.seed(seed)
+
     freqs_df = pandas.read_parquet(inf)
     # Filter according to not being
     # a country/language (proper noun-ish)
@@ -163,6 +168,7 @@ def main(inf, derivtrim_inf, outf):
     print()
 
     derivtrim_df = pandas.read_parquet(derivtrim_inf)
+    derivtrim_df = derivtrim_df[~derivtrim_df["lemma"].isin(bad_list)]
 
     #coverages = recalculate_coverages(freqs_df, current_wordlist)
 
@@ -181,7 +187,7 @@ def main(inf, derivtrim_inf, outf):
     print("derivtrim_df", derivtrim_df)
     print("freqs_df", freqs_df)
     #import sys; sys.exit()
-    fill_freq_range(derivtrim_df, current_wordlist)
+    fill_freq_range(derivtrim_df, current_wordlist, seed=seed)
 
     print("Filled up!")
     print(len(current_wordlist))
