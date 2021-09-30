@@ -182,7 +182,6 @@ def main(email, days):
             create_date=create_datetime,
             accept_date=None,
             email=email,
-            begin_days=days,
             accept_deadline=accept_deadline,
             complete_deadline=complete_deadline,
             proof_type=proof_type,
@@ -232,6 +231,7 @@ def main(email, days):
     link = loop.run_until_complete(get_link())
     print(EMAIL_TEMPLATE.render(
         email=email,
+        begin_days=days,
         link=link,
         accept_deadline=accept_deadline.strftime('%A %d/%m/%Y'),
         complete_deadline=complete_deadline.strftime('%A %d/%m/%Y'),
