@@ -97,6 +97,17 @@ def repeat_input(prompt, process):
             return proc_result
 
 
+def enum_prompt(prompt, enum):
+    return repeat_input(
+        "{} ({})".format(prompt, "/".join((opt.name for opt in enum))),
+        lambda k: enum[k]
+    )
+
+
+def get_proof_type():
+    return enum_prompt("Proof type", ProofType)
+
+
 def prompts(email):
     years_in_finland = repeat_input("Years in Finland", int)
     native_lang_obj = repeat_input("Native language (iso alpha2 code)", convert_lang)
@@ -110,10 +121,7 @@ def prompts(email):
             break
         cefr = repeat_input("CEFR level (a1-c2/native/none or 1-7)", partial(convert_cefr, allow_none=True))
         other_langs.append((other_lang_obj, cefr))
-    proof_type = repeat_input(
-        "Proof type (yki_intermediate/yki_advanced/other)",
-        lambda k: ProofType[k]
-    )
+    proof_type = get_proof_type()
     proof_age = repeat_input(
         "Proof age (lt1/lt3/lt5/gte5)",
         lambda k: ProofAge[k]

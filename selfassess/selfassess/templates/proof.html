@@ -137,7 +137,7 @@ function incrTree(elem) {
 
     <div class="flex items-center-ns flex-column-reverse flex-row-ns mh3 mv4 mv3-ns">
         <input class="flex-none" type="file" name="proof" id="proof" accept="image/*" capture="camera" required>
-        <label for="proof" class="lh-copy mb2 mb0-ns">
+        <label for="proof" class="lh-title mb2 mb0-ns">
 
             Please upload a photo showing the following:
 
@@ -152,9 +152,16 @@ function incrTree(elem) {
         </label>
     </div>
 
-    <div class="flex items-center ma3">
+    <div class="flex items-center mh3 mv4">
         {{ wtform.proof_type.label(class_="w5") }}
-        {{ wtform.proof_type(class_="ml3") }}
+        <div class="ml3" id="{{ wtform.proof_type.name }}">
+            {% for choice in wtform.proof_type %}
+                <div class="flex items-center">
+                    {{ choice }}
+                    <label class="ml2 ma1" for="{{ choice.id }}">{{ choice.label.text }}</label>
+                </div>
+            {% endfor %}
+        </div>
     </div>
 
     <div class="flex items-center ma3">

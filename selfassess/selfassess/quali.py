@@ -5,6 +5,9 @@ class ProofType(enum.Enum):
     yki_intermediate = 1
     yki_advanced = 2
     other = 3
+    course_english_degree = 4
+    completed_finnish_upper_secondary = 5
+    completed_finnish_degree = 6
 
 
 class ProofAge(enum.Enum):

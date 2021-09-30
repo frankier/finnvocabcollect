@@ -2,7 +2,7 @@ from .database import Participant, ParticipantLanguage
 from wtforms_alchemy import ModelForm, ModelFieldList
 from .quali import ProofAge, ProofType
 from itertools import chain
-from wtforms import SelectField, FormField, ValidationError, Field
+from wtforms import SelectField, FormField, ValidationError, Field, RadioField
 from wtforms.widgets import TextInput
 import langcodes
 from werkzeug.datastructures import ImmutableMultiDict
@@ -99,9 +99,27 @@ class ParticipantForm(ModelForm):
             "text_on_proof",
         ]
 
-    proof_type = SelectField("Type of proof", choices=[
+    proof_type = RadioField("Type of proof", choices=[
         ("yki_intermediate", "YKI (Intermediate level)"),
         ("yki_advanced", "YKI (Advanced level)"),
+        (
+            "course_english_degree",
+            "Short course completed as part of primarily non-Finnish degree "
+            "(e.g. international degree programme in English)"
+        ),
+        (
+            "freestanding_course",
+            "Free-standing short course "
+            "(e.g. at an Adult Education Center)"
+        ),
+        (
+            "completed_finnish_upper_secondary",
+            "Upper secondary school or vocational school completed in Finnish"
+        ),
+        (
+            "completed_finnish_degree",
+            "University or University of Applied Science degree completed in Finnish"
+        ),
         ("other", "Other proof"),
     ])
     proof_age = SelectField("Age of proof", choices=[
