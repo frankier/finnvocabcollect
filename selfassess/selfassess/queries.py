@@ -1,7 +1,7 @@
 import quart.flask_patch  # noqa
-from .database import Response, ResponseSlot, ParticipantLanguage
+from .database import Response, ResponseSlot, ParticipantLanguage, Participant
 from sqlalchemy import select, desc, func
-from sqlalchemy.orm import contains_eager, joinedload, aliased
+from sqlalchemy.orm import contains_eager, joinedload, aliased, lazyload
 
 
 def _recent_responses():
@@ -41,4 +41,14 @@ def native_language(user):
     return select(ParticipantLanguage).filter(
         ParticipantLanguage.primary_native.is_(True) &
         (ParticipantLanguage.participant_id == user.id)
+    )
+
+
+def participant_timeline_query():
+    return select(Participant).options(
+        lazyload(Participant.response_slots).options(
+            joinedload(ResponseSlot.responses),
+            joinedload(ResponseSlot.presentations)
+        ),
+        lazyload(Participant.session_log_entries)
     )

@@ -4,6 +4,7 @@ from pandas import DataFrame
 from selfassess.utils import get_session
 from selfassess.database import Participant
 from .utils import get_participant_sessions
+from .queries import participant_timeline_query
 
 
 @click.command()
@@ -19,7 +20,7 @@ def main(csvout):
     Period of the task to be done
     """
     sqlite_sess = get_session()
-    participants = sqlite_sess.query(Participant)
+    participants = sqlite_sess.execute(participant_timeline_query()).scalars()
     names = []
     surnames = []
     email = []

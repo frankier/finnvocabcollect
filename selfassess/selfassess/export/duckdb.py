@@ -4,6 +4,7 @@ from selfassess.utils import get_session
 from selfassess.database import Participant
 from selfassess.quali import CEFR_SKILLS
 from .utils import get_participant_sessions
+from .queries import participant_timeline_query
 
 
 CEFR_FIELDS = [
@@ -76,7 +77,7 @@ def main(db_out, which):
     # -- but there are 15 items and this runs as a batch job
     ddb_conn = setup_duckdb(db_out)
     sqlite_sess = get_session()
-    participants = sqlite_sess.query(Participant)
+    participants = sqlite_sess.execute(participant_timeline_query()).scalars()
     session_id = 0
     for pid, participant in enumerate(participants):
         if (
