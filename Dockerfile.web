@@ -35,6 +35,9 @@ RUN poetry export \
 RUN echo "/opt/finnvocabcollect" > \
     /usr/local/lib/python3.7/dist-packages/selfassess.pth
 
+RUN echo 'cmd="$1"; shift; exec python -m "selfassess.$cmd" $@' > \
+    /usr/bin/sa && chmod +x /usr/bin/sa
+
 USER nobody
 
 COPY selfassess ./
