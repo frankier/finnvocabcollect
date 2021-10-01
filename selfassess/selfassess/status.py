@@ -142,7 +142,7 @@ class GridAgg:
         for lang in langs:
             tab.append([
                 lang,
-                *("".join(self._grid[(cefr, lang)]) for cefr in cefrs)
+                *("".join(self._grid.get((cefr, lang), [])) for cefr in cefrs)
             ])
         return tabulate(tab, tablefmt="fancy_grid")
 
