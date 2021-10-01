@@ -30,7 +30,7 @@ def gather_timestamped(objs):
     return objs_timestamped
 
 
-def get_participant_sessions(
+def gather_events(
     participant,
     only_selfassess=False,
     only_miniexam=False
@@ -64,6 +64,10 @@ def get_participant_sessions(
             events.extend(gather_timestamped(slot.responses))
             events.extend(gather_timestamped(slot.presentations))
     events.sort()
+    return events
+
+
+def events_to_sessions(events):
     last_timestamp = None
     sessions = []
 
@@ -107,3 +111,13 @@ def get_participant_sessions(
     return sessions
 
 
+def get_participant_sessions(
+    participant,
+    only_selfassess=False,
+    only_miniexam=False
+):
+    return events_to_sessions(gather_events(
+        participant,
+        only_selfassess=only_selfassess,
+        only_miniexam=only_miniexam
+    ))

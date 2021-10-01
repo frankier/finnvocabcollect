@@ -1,11 +1,11 @@
 import click
 from selfassess.utils import get_session
-from selfassess.export.utils import get_participant_sessions
+from selfassess.export.utils import gather_events, events_to_sessions
 from sqlalchemy import select
 from sqlalchemy import func
 from selfassess.database import Word
+from selfassess.quali import num_to_cefr
 from selfassess.queries import participant_timeline_query, native_language
-from selfassess.quali import CEFR_LEVELS
 from datetime import date
 from tabulate import tabulate
 from ordered_set import OrderedSet
@@ -19,30 +19,40 @@ def fmt_dt(dt):
 
 
 def print_participant(participant_num, lang, total_words, participant):
+    selfassess_events = gather_events(participant, only_selfassess=True)
+    miniexam_events = gather_events(participant, only_miniexam=True)
+    last_timestamp = None
+    if len(selfassess_events):
+        last_timestamp = selfassess_events[-1][0]
+    if len(miniexam_events):
+        last_timestamp = miniexam_events[-1][0]
+    cefr = num_to_cefr(participant.cefr_selfassess_reading_comprehension)
+    if participant.given_name:
+        name = f" ({participant.given_name} {participant.surname})"
+    else:
+        name = ""
     print(
-        f"Participant #{participant_num} {lang}: "
-        f"{participant.given_name} {participant.surname} "
-        f"({participant.email})"
+        f"#{participant_num:02} {cefr} {lang} {participant.email}" + name
     )
+    print("  Last activity: {}".format(fmt_dt(last_timestamp)))
     print("  Account\n\tCreated: {}\n\tAccepted: {}\n\tAcceptance deadline: {}".format(
         fmt_dt(participant.create_date),
         fmt_dt(participant.accept_date),
         participant.accept_deadline,
     ))
-    print("  Proof\n\tUploaded: {}\n\tProof: {}\n\tAccepted: {}\n\tText: \"{}\"".format(
+    print("  Proof\n\tUploaded: {}\n\tProof: {}\n\tAccepted: {}\n\tText:\n{}".format(
         fmt_dt(participant.proof_upload_date),
         participant.proof or "no",
         fmt_dt(participant.proof_accept_date),
-        participant.text_on_proof
+        "\n".join((
+            "\t\t" + line
+            for line in participant.text_on_proof.split("\n")
+        ))
     ))
-    sessions = [
-        part_session
-        for part_session in
-        get_participant_sessions(participant, only_selfassess=True)
-    ]
+    selfassess_sessions = events_to_sessions(selfassess_events)
     total_mins = int(sum((
         part_session["time"].total_seconds()
-        for part_session in sessions
+        for part_session in selfassess_sessions
     )) // 60)
     completed_words = participant.next_response
     print((
@@ -56,7 +66,7 @@ def print_participant(participant_num, lang, total_words, participant):
         total_words,
         total_mins // 60,
         total_mins % 60,
-        len(sessions)
+        len(selfassess_sessions)
     ))
     print("  Mini-exam\n\tStarted: {}\n\tFinished: {}\n\tAccepted: {}\n\tCompletion deadline: {}".format(
         fmt_dt(participant.miniexam_start_date),
@@ -138,11 +148,14 @@ class GridAgg:
         tab = []
         cefrs = self._cefr_build.build()
         langs = self._lang_build.build()
-        tab.append(["", *(CEFR_LEVELS[cefr - 1] for cefr in cefrs)])
+        tab.append(["", *(num_to_cefr(cefr) for cefr in cefrs)])
         for lang in langs:
             tab.append([
                 lang,
-                *("".join(self._grid.get((cefr, lang), [])) for cefr in cefrs)
+                *(
+                    "".join(sorted(self._grid.get((cefr, lang), [])))
+                    for cefr in cefrs
+                )
             ])
         return tabulate(tab, tablefmt="fancy_grid")
 

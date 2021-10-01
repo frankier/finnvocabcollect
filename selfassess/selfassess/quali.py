@@ -26,3 +26,7 @@ CEFR_SKILLS = [
 
 CEFR_LEVELS = ["a1", "a2", "b1", "b2", "c1", "c2"]
 CEFR_LEVELS_NATIVE = CEFR_LEVELS + ["native"]
+
+
+def num_to_cefr(cefr):
+    return CEFR_LEVELS[cefr - 1].upper()
