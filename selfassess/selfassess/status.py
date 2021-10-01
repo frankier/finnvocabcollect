@@ -98,7 +98,7 @@ def group_participant(participant):
             return "start_overdue"
         elif participant.accept_deadline == today:
             return "almost_overdue"
-        elif (participant.create_date.date() - today).days > 2:
+        elif (participant.create_date.date() - today).days >= 2:
             return "due_reminder"
         else:
             return "idle"
