@@ -18,6 +18,10 @@ def fmt_dt(dt):
         return "no"
 
 
+def participant_cefr(participant):
+    return participant.cefr_selfassess_reading_comprehension
+
+
 def print_participant(lang, total_words, participant):
     selfassess_events = gather_events(participant, only_selfassess=True)
     miniexam_events = gather_events(participant, only_miniexam=True)
@@ -26,7 +30,7 @@ def print_participant(lang, total_words, participant):
         last_timestamp = selfassess_events[-1][0]
     if len(miniexam_events):
         last_timestamp = miniexam_events[-1][0]
-    cefr = num_to_cefr(participant.cefr_selfassess_reading_comprehension)
+    cefr = num_to_cefr(participant_cefr(participant))
     if participant.given_name:
         name = f" ({participant.given_name} {participant.surname})"
     else:
@@ -208,7 +212,7 @@ class GridAgg:
         self._grid = {}
 
     def add(self, lang, participant, sym):
-        cefr = participant.cefr_proof_reading_comprehension
+        cefr = participant_cefr(participant)
         self._cefr_build.add(cefr)
         self._lang_build.add(lang)
         self._grid.setdefault((cefr, lang), []).append(sym)
