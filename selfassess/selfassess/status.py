@@ -18,7 +18,7 @@ def fmt_dt(dt):
         return "no"
 
 
-def print_participant(participant_num, lang, total_words, participant):
+def print_participant(lang, total_words, participant):
     selfassess_events = gather_events(participant, only_selfassess=True)
     miniexam_events = gather_events(participant, only_miniexam=True)
     last_timestamp = None
@@ -32,7 +32,7 @@ def print_participant(participant_num, lang, total_words, participant):
     else:
         name = ""
     print(
-        f"#{participant_num:02} {cefr} {lang} {participant.email}" + name
+        f"#{participant.id:02} {cefr} {lang} {participant.email}" + name
     )
     print("  Last activity: {}".format(fmt_dt(last_timestamp)))
     print("  Account\n\tCreated: {}\n\tAccepted: {}\n\tAcceptance deadline: {}".format(
@@ -76,49 +76,118 @@ def print_participant(participant_num, lang, total_words, participant):
     ))
 
 
-STATUSES = [
-    "start_overdue",
-    "finish_overdue",
-    "almost_overdue",
-    "due_reminder",
-    "complete",
-    "started_selfassess",
-    "idle",
-    "withdrawn",
-]
+class StatusBase:
+    @classmethod
+    def status_to_symbol(cls, status):
+        return cls.TO_SYMBOLS.get(status)
+
+    @classmethod
+    def with_symbol(cls, participant):
+        status = cls.from_participant(participant)
+        return status, cls.status_to_symbol(status)
 
 
-STATUSES_TO_SYMBOLS = {
-    "start_overdue": "🪦",
-    "finish_overdue": "🪦",
-    "almost_overdue": "😟",
-    "due_reminder": "⏰",
-    "complete": "✔️",
-    "started_selfassess": "😄",
-    "idle": "😴",
-}
+def is_due_reminder(participant, today):
+    return (participant.create_date.date() - today).days >= 2
 
 
-def group_participant(participant):
-    today = date.today()
-    if participant.withdraw_date is not None:
-        return "withdrawn"
-    elif participant.selfassess_start_date is None:
-        if participant.accept_deadline < today:
-            return "start_overdue"
-        elif participant.accept_deadline == today:
-            return "almost_overdue"
-        elif (participant.create_date.date() - today).days >= 2:
+class NormalStatus(StatusBase):
+    STATUSES = [
+        "start_overdue",
+        "finish_overdue",
+        "almost_overdue",
+        "due_reminder",
+        "complete",
+        "started_selfassess",
+        "idle",
+        "withdrawn",
+    ]
+
+    TO_SYMBOLS = {
+        "start_overdue": "🪦",
+        "finish_overdue": "🪦",
+        "almost_overdue": "😟",
+        "due_reminder": "⏰",
+        "complete": "✔️",
+        "started_selfassess": "😄",
+        "idle": "😴",
+    }
+
+    HIDE_DEFAULT = ["withdrawn"]
+
+    @staticmethod
+    def from_participant(participant):
+        today = date.today()
+        if participant.withdraw_date is not None:
+            return "withdrawn"
+        elif participant.selfassess_start_date is None:
+            if participant.accept_deadline < today:
+                return "start_overdue"
+            elif participant.accept_deadline == today:
+                return "almost_overdue"
+            elif is_due_reminder(participant, today):
+                return "due_reminder"
+            else:
+                return "idle"
+        elif participant.miniexam_finish_date is None:
+            if participant.complete_deadline < today:
+                return "finish_overdue"
+            else:
+                return "started_selfassess"
+        else:
+            return "complete"
+
+
+class ToActionStatus(StatusBase):
+    STATUSES = [
+        "to_withdraw",
+        "to_approve_proof",
+        "to_approve_selfassess",
+        "to_approve_miniexam",
+        "due_reminder",
+        "nothing_due",
+        "withdrawn",
+    ]
+
+    TO_SYMBOLS = {
+        "to_approve_proof": "🛂",
+        "to_approve_selfassess": "5️",
+        "to_approve_miniexam": "💯",
+        "to_withdraw": "🪦",
+        "due_reminder": "⏰",
+    }
+
+    HIDE_DEFAULT = ["nothing_due", "withdrawn"]
+
+    @staticmethod
+    def from_participant(participant):
+        today = date.today()
+        if participant.withdraw_date is not None:
+            return "withdrawn"
+        elif (
+            participant.accept_deadline < today
+            or participant.complete_deadline < today
+        ):
+            return "to_withdraw"
+        elif (
+            participant.proof is not None
+            and participant.proof_accept_date is None
+        ):
+            return "to_approve_proof"
+        elif (
+            participant.selfassess_finish_date is not None
+            and participant.selfassess_accept_date is None
+        ):
+            return "to_approve_selfassess"
+        elif (
+            participant.miniexam_finish_date is not None
+            and participant.miniexam_accept_date is None
+        ):
+            return "to_approve_selfassess"
+        elif is_due_reminder(participant, today):
             return "due_reminder"
         else:
-            return "idle"
-    elif participant.miniexam_finish_date is None:
-        if participant.complete_deadline < today:
-            return "finish_overdue"
-        else:
-            return "started_selfassess"
-    else:
-        return "complete"
+            return "nothing_due"
 
 
 class IndexBuilder:
@@ -162,35 +231,38 @@ class GridAgg:
 
 @click.command()
 @click.option("--ignore", multiple=True)
-@click.option("--show-withdrawn/--hide-withdrawn")
-def main(ignore, show_withdrawn):
+@click.option("--show-all/--hide-default")
+@click.option("--to-action/--normal-status")
+def main(ignore, show_all, to_action):
+    if to_action:
+        status_cls = ToActionStatus
+    else:
+        status_cls = NormalStatus
     sqlite_sess = get_session()
     participants = sqlite_sess.execute(participant_timeline_query()).scalars()
     grid_groups = GridAgg()
-    status_groups = {status: [] for status in STATUSES}
+    status_groups = {status: [] for status in status_cls.STATUSES}
     for pid, participant in enumerate(participants):
         if participant.email in ignore:
             continue
         lang = sqlite_sess.execute(native_language(participant)).scalars().first().language
-        status = group_participant(participant)
-        if status in STATUSES_TO_SYMBOLS:
-            grid_groups.add(lang, participant, STATUSES_TO_SYMBOLS[status])
+        status, symbol = status_cls.with_symbol(participant)
+        if symbol is not None:
+            grid_groups.add(lang, participant, symbol)
         status_groups[status].append((lang, participant))
 
     total_words = sqlite_sess.execute(
         select(func.count()).select_from(Word)
     ).scalars().first()
-    participant_num = 1
     for status_group, status_participants in status_groups.items():
-        if status_group == "withdrawn" and not show_withdrawn:
+        if status_group in status_cls.HIDE_DEFAULT and not show_all:
             continue
-        sym = STATUSES_TO_SYMBOLS.get(status_group, "*")
+        sym = status_cls.status_to_symbol(status_group) or "*"
         group_title = status_group.title().replace("_", " ")
         print(f" {sym}{sym} {group_title} {sym}{sym} ")
         for lang, participant in status_participants:
             print()
-            print_participant(participant_num, lang, total_words, participant)
-            participant_num += 1
+            print_participant(lang, total_words, participant)
             print()
         print()
         print()
