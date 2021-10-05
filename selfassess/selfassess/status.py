@@ -168,10 +168,10 @@ class ToActionStatus(StatusBase):
         today = date.today()
         if participant.withdraw_date is not None:
             return "withdrawn"
-        elif (
-            participant.accept_deadline < today
-            or participant.complete_deadline < today
-        ):
+        elif ((
+            participant.selfassess_start_date is None
+            and participant.accept_deadline < today
+        ) or participant.complete_deadline < today):
             return "to_withdraw"
         elif (
             participant.proof is not None
