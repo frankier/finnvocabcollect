@@ -99,7 +99,7 @@ class ParticipantLanguage(Base):
     __tablename__ = "participant_language"
 
     id = Column(Integer, primary_key=True)
-    participant_id = Column(Integer, ForeignKey('participant.id'), nullable=False)
+    participant_id = Column(Integer, ForeignKey('participant.id'), nullable=False, index=True)
     language = Column(String, nullable=False)
     level = Column(Integer, nullable=True, info=CEFR_NATIVE_INFO, default=1)
     primary_native = Column(Boolean, default=False)
@@ -111,7 +111,7 @@ class ParticipantResponseLanguage(Base):
     __tablename__ = "participant_response_language"
 
     id = Column(Integer, primary_key=True)
-    participant_id = Column(Integer, ForeignKey('participant.id'), nullable=False)
+    participant_id = Column(Integer, ForeignKey('participant.id'), nullable=False, index=True)
     language = Column(String, nullable=False)
     level = Column(Integer, nullable=False, info=CEFR_NATIVE_INFO, default=1)
 
@@ -132,7 +132,7 @@ class ResponseSlot(Base):
     __tablename__ = "response_slot"
 
     id = Column(Integer, primary_key=True)
-    participant_id = Column(Integer, ForeignKey('participant.id'), nullable=False)
+    participant_id = Column(Integer, ForeignKey('participant.id'), nullable=False, index=True)
     word_id = Column(Integer, ForeignKey('word.id'), nullable=False)
     response_order = Column(Integer, nullable=False)
 
@@ -146,7 +146,7 @@ class Response(Base):
     __tablename__ = "response"
 
     id = Column(Integer, primary_key=True)
-    response_slot_id = Column(Integer, ForeignKey('response_slot.id'), nullable=False)
+    response_slot_id = Column(Integer, ForeignKey('response_slot.id'), nullable=False, index=True)
     timestamp = Column(DateTime, nullable=False)
     rating = Column(Integer, nullable=False)
 
@@ -159,7 +159,7 @@ class Response(Base):
 class Presentation(Base):
     __tablename__ = "presentation"
     id = Column(Integer, primary_key=True)
-    response_slot_id = Column(Integer, ForeignKey('response_slot.id'), nullable=False)
+    response_slot_id = Column(Integer, ForeignKey('response_slot.id'), nullable=False, index=True)
     timestamp = Column(DateTime, nullable=False)
 
     slot = relationship("ResponseSlot", back_populates="presentations")
@@ -169,8 +169,8 @@ class MiniexamSlot(Base):
     __tablename__ = "miniexam_slot"
 
     id = Column(Integer, primary_key=True)
-    participant_id = Column(Integer, ForeignKey('participant.id'), nullable=False)
-    word_id = Column(Integer, ForeignKey('word.id'), nullable=False)
+    participant_id = Column(Integer, ForeignKey('participant.id'), nullable=False, index=True)
+    word_id = Column(Integer, ForeignKey('word.id'), nullable=False, index=True)
     miniexam_order = Column(Integer, nullable=False)
 
     participant = relationship("Participant", back_populates="miniexam_slots")
@@ -196,7 +196,7 @@ class MiniexamResponse(Base):
     __tablename__ = "miniexam_response"
 
     id = Column(Integer, primary_key=True)
-    miniexam_slot_id = Column(Integer, ForeignKey('miniexam_slot.id'), nullable=False)
+    miniexam_slot_id = Column(Integer, ForeignKey('miniexam_slot.id'), nullable=False, index=True)
     timestamp = Column(DateTime, nullable=False)
     response_lang = Column(Enum(MiniexamResponseLanguage), nullable=True)
     response_type = Column(Enum(MiniexamResponseType), nullable=False)
@@ -222,7 +222,7 @@ class SessionLogEntry(Base):
     __tablename__ = "session_log_entry"
 
     id = Column(Integer, primary_key=True)
-    participant_id = Column(Integer, ForeignKey('participant.id'), nullable=False)
+    participant_id = Column(Integer, ForeignKey('participant.id'), nullable=False, index=True)
     timestamp = Column(DateTime, nullable=False)
     type = Column(Enum(SessionEvent), nullable=False)
     payload = Column(JSON)
