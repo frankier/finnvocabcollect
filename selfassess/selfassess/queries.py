@@ -44,6 +44,16 @@ def native_language(user):
     )
 
 
+def latest_selfassess_response(user):
+    return (
+        select(func.max(Response.timestamp).label("latest_timestamp"))
+        .join(ResponseSlot, Response.response_slot_id == ResponseSlot.id)
+        .filter(
+            ResponseSlot.participant_id == user.id
+        )
+    )
+
+
 def participant_timeline_query():
     return select(Participant).options(
         lazyload(Participant.response_slots).options(

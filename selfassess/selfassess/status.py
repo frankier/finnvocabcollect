@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy import func
 from selfassess.database import Word
 from selfassess.quali import num_to_cefr
-from selfassess.queries import participant_timeline_query, native_language
+from selfassess.queries import participant_timeline_query, native_language, latest_selfassess_response
 from datetime import date
 from tabulate import tabulate
 from ordered_set import OrderedSet
@@ -86,12 +86,12 @@ class StatusBase:
         return cls.TO_SYMBOLS.get(status)
 
     @classmethod
-    def with_symbol(cls, participant):
-        status = cls.from_participant(participant)
+    def with_symbol(cls, participant, latest_selfassess_ts):
+        status = cls.from_participant(participant, latest_selfassess_ts)
         return status, cls.status_to_symbol(status)
 
 
-def is_due_reminder(participant, today):
+def is_due_start_reminder(participant, today):
     return (participant.create_date.date() - today).days >= 2
 
 
@@ -102,7 +102,9 @@ class NormalStatus(StatusBase):
         "almost_overdue",
         "due_reminder",
         "complete",
+        "early_selfassess",
         "started_selfassess",
+        "disengaged_selfassess",
         "idle",
         "withdrawn",
     ]
@@ -113,14 +115,16 @@ class NormalStatus(StatusBase):
         "almost_overdue": "😟",
         "due_reminder": "⏰",
         "complete": "✔️",
+        "early_selfassess": "🥺",
         "started_selfassess": "😄",
+        "disengaged_selfassess": "🙂",
         "idle": "😴",
     }
 
     HIDE_DEFAULT = ["withdrawn"]
 
     @staticmethod
-    def from_participant(participant):
+    def from_participant(participant, latest_selfassess_ts):
         today = date.today()
         if participant.withdraw_date is not None:
             return "withdrawn"
@@ -129,13 +133,17 @@ class NormalStatus(StatusBase):
                 return "start_overdue"
             elif participant.accept_deadline == today:
                 return "almost_overdue"
-            elif is_due_reminder(participant, today):
+            elif is_due_start_reminder(participant, today):
                 return "due_reminder"
             else:
                 return "idle"
         elif participant.miniexam_finish_date is None:
             if participant.complete_deadline < today:
                 return "finish_overdue"
+            elif (latest_selfassess_ts.date() - today).days >= 4:
+                return "disengaged_selfassess"
+            elif participant.next_response < 1000:
+                return "early_selfassess"
             else:
                 return "started_selfassess"
         else:
@@ -164,7 +172,7 @@ class ToActionStatus(StatusBase):
     HIDE_DEFAULT = ["nothing_due", "withdrawn"]
 
     @staticmethod
-    def from_participant(participant):
+    def from_participant(participant, latest_selfassess_ts):
         today = date.today()
         if participant.withdraw_date is not None:
             return "withdrawn"
@@ -188,7 +196,7 @@ class ToActionStatus(StatusBase):
             and participant.miniexam_accept_date is None
         ):
             return "to_approve_selfassess"
-        elif is_due_reminder(participant, today):
+        elif is_due_start_reminder(participant, today):
             return "due_reminder"
         else:
             return "nothing_due"
@@ -249,8 +257,9 @@ def main(ignore, show_all, to_action):
     for pid, participant in enumerate(participants):
         if participant.email in ignore:
             continue
+        latest_selfassess_ts = sqlite_sess.execute(latest_selfassess_response(participant)).scalars().first()
         lang = sqlite_sess.execute(native_language(participant)).scalars().first().language
-        status, symbol = status_cls.with_symbol(participant)
+        status, symbol = status_cls.with_symbol(participant, latest_selfassess_ts)
         if symbol is not None:
             grid_groups.add(lang, participant, symbol)
         status_groups[status].append((lang, participant))
