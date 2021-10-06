@@ -4,7 +4,7 @@ from selfassess.utils import get_session
 from selfassess.database import Participant
 from selfassess.quali import CEFR_SKILLS
 from .utils import get_participant_sessions
-from .queries import participant_timeline_query
+from selfassess.queries import participant_timeline_query
 
 
 CEFR_FIELDS = [
@@ -63,6 +63,18 @@ def setup_duckdb(db_out):
     );
     """)
     return conn
+
+
+def flush_rows(schema, conn, rows):
+    if not rows:
+        return
+    import pandas
+    df = pandas.DataFrame(rows)
+    conn.register('df', df)
+    conn.execute(f"INSERT INTO {schema} SELECT * FROM df;")
+    conn.unregister('df')
+    rows.clear()
+    conn.commit()
 
 
 @click.command()
@@ -127,6 +139,7 @@ def main(db_out, which):
             "insert into participant_language values (?, ?, ?)",
             participant_languages
         )
+        response_vals = []
         for selfassess_session in selfassess_sessions:
             session_date = selfassess_session["first_timestamp"].date()
             ddb_conn.execute(
@@ -139,7 +152,6 @@ def main(db_out, which):
                     (session_date - first_date).days
                 ]
             )
-            response_vals = []
             for response in selfassess_session["response"]:
                 if not getattr(response, "is_latest", False):
                     continue
@@ -153,10 +165,7 @@ def main(db_out, which):
                     response.rating
                 ))
             session_id += 1
-            ddb_conn.executemany(
-                "insert into selfassess_response values (?, ?, ?, ?)",
-                response_vals
-            )
+        flush_rows("selfassess_response", ddb_conn, response_vals)
         miniexam_responses = []
         for miniexam_slot in participant.miniexam_slots:
             latest_timestamp = None
@@ -176,10 +185,7 @@ def main(db_out, which):
                 latest_response.response,
                 latest_response.mark
             ))
-        ddb_conn.executemany(
-            "insert into miniexam_response values (?, ?, ?, ?, ?, ?)",
-            miniexam_responses
-        )
+        flush_rows("miniexam_response", ddb_conn, miniexam_responses)
 
 
 if __name__ == "__main__":
