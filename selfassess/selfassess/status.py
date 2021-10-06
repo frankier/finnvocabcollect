@@ -140,7 +140,7 @@ class NormalStatus(StatusBase):
         elif participant.miniexam_finish_date is None:
             if participant.complete_deadline < today:
                 return "finish_overdue"
-            elif (latest_selfassess_ts.date() - today).days >= 4:
+            elif latest_selfassess_ts is not None and (latest_selfassess_ts.date() - today).days >= 4:
                 return "disengaged_selfassess"
             elif participant.next_response < 1000:
                 return "early_selfassess"
