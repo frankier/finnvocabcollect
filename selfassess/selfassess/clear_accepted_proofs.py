@@ -12,7 +12,7 @@ def main():
     session = get_session()
     participants = session.execute(
         session.query(Participant)
-        .filter(Participant.selfassess_accept_date.isnot(None))
+        .filter(Participant.proof_accept_date.isnot(None))
     ).scalars()
     for participant in participants:
         path = pjoin(app.config['UPLOAD_DIR'], participant.proof)
