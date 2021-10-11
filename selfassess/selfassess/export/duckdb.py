@@ -84,19 +84,27 @@ def flush_rows(schema, conn, rows):
     type=click.Choice(["all", "complete", "incomplete"]),
     default="all"
 )
-def main(db_out, which):
+
+@click.option(
+    "--use-original-ids/--renumber-ids",
+)
+def main(db_out, which, use_original_ids):
     # Inefficient ORM usage here
     # -- but there are 15 items and this runs as a batch job
     ddb_conn = setup_duckdb(db_out)
     sqlite_sess = get_session()
     participants = sqlite_sess.execute(participant_timeline_query()).scalars()
     session_id = 0
-    for pid, participant in enumerate(participants):
+    if not use_original_ids:
+        pid = 0
+    for participant in participants:
         if (
             (which == "complete" and participant.miniexam_finish_date is None) or
             (which == "incomplete" and participant.miniexam_finish_date is not None)
         ):
             continue
+        if use_original_ids:
+            pid = participant.id
         selfassess_sessions = get_participant_sessions(
             participant,
             only_selfassess=True
@@ -186,6 +194,8 @@ def main(db_out, which):
                 latest_response.mark
             ))
         flush_rows("miniexam_response", ddb_conn, miniexam_responses)
+        if not use_original_ids:
+            pid += 1
 
 
 if __name__ == "__main__":
