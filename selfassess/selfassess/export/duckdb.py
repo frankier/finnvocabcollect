@@ -1,10 +1,10 @@
 import click
 import duckdb
 from selfassess.utils import get_session
-from selfassess.database import Participant
 from selfassess.quali import CEFR_SKILLS
 from .utils import get_participant_sessions
 from selfassess.queries import participant_timeline_query
+from datetime import timedelta
 
 
 CEFR_FIELDS = [
@@ -28,10 +28,14 @@ create table participant (
 )
 
 
-def setup_duckdb(db_out):
+def setup_duckdb(db_out, fine_response_time=False):
     conn = duckdb.connect(db_out)
 
     print("Creating tables")
+    if fine_response_time:
+        time_col = "time_usecs int64"
+    else:
+        time_col = "time_secs int"
     conn.execute(
         PARTICIPANT_TABLE +
         """
@@ -50,7 +54,7 @@ def setup_duckdb(db_out):
     create table selfassess_response (
         session_id int,
         word varchar,
-        time_secs int,
+        {},
         rating int
     );
     create table miniexam_response (
@@ -61,7 +65,7 @@ def setup_duckdb(db_out):
         response varchar,
         grade int
     );
-    """)
+    """.format(time_col))
     return conn
 
 
@@ -84,14 +88,16 @@ def flush_rows(schema, conn, rows):
     type=click.Choice(["all", "complete", "incomplete"]),
     default="all"
 )
-
 @click.option(
     "--use-original-ids/--renumber-ids",
 )
-def main(db_out, which, use_original_ids):
+@click.option(
+    "--fine-response-time/--coarse-response-time",
+)
+def main(db_out, which, use_original_ids, fine_response_time):
     # Inefficient ORM usage here
     # -- but there are 15 items and this runs as a batch job
-    ddb_conn = setup_duckdb(db_out)
+    ddb_conn = setup_duckdb(db_out, fine_response_time)
     sqlite_sess = get_session()
     participants = sqlite_sess.execute(participant_timeline_query()).scalars()
     session_id = 0
@@ -163,13 +169,15 @@ def main(db_out, which, use_original_ids):
             for response in selfassess_session["response"]:
                 if not getattr(response, "is_latest", False):
                     continue
+                presentation_timestamp = response.slot.presentations[-1].timestamp
+                if fine_response_time:
+                    rt = int((response.timestamp - presentation_timestamp) / timedelta(microseconds=1) + 0.5)
+                else:
+                    rt = (response.timestamp - presentation_timestamp).total_seconds()
                 response_vals.append((
                     session_id,
                     response.slot.word.word,
-                    (
-                        response.timestamp
-                        - response.slot.presentations[-1].timestamp
-                    ).total_seconds(),
+                    rt,
                     response.rating
                 ))
             session_id += 1
