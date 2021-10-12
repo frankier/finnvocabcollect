@@ -7,6 +7,9 @@ import duckdb
 
 def plot(usecs, rating, out_fn):
     fig, ax = plt.subplots()
+    fig.set_size_inches(12, 12)
+    ax.set_ylim(0, 20)
+    ax.set_yticks(range(21))
     scatter = ax.scatter(x=range(len(usecs)), y=usecs, c=rating, label=rating)
     legend = ax.legend(
         *scatter.legend_elements(),
@@ -40,7 +43,7 @@ def main(db_in, pid, figout):
     for session_id, session_df in df.groupby("sid"):
         out_fn = pjoin(figout, f"{session_id}.png")
         plot(
-            session_df["usecs"],
+            session_df["usecs"].astype(float) / 1000000,
             session_df["rating"],
             out_fn
         )
