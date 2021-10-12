@@ -254,7 +254,7 @@ def main(ignore, show_all, to_action):
     participants = sqlite_sess.execute(participant_timeline_query()).scalars()
     grid_groups = GridAgg()
     status_groups = {status: [] for status in status_cls.STATUSES}
-    for pid, participant in enumerate(participants):
+    for participant in participants:
         if participant.email in ignore:
             continue
         latest_selfassess_ts = sqlite_sess.execute(latest_selfassess_response(participant)).scalars().first()
