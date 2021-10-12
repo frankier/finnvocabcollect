@@ -17,7 +17,7 @@ def main():
     for participant in participants:
         path = pjoin(app.config['UPLOAD_DIR'], participant.proof)
         while 1:
-            resp = input(f"Remove {path}? y/n")
+            resp = input(f"Remove {path}? y/n > ")
             if resp == "y":
                 break
             elif resp == "n":
