@@ -114,7 +114,7 @@ class NormalStatus(StatusBase):
         "finish_overdue": "🪦",
         "almost_overdue": "😟",
         "due_reminder": "⏰",
-        "complete": "✔️",
+        "complete": "✓ ",
         "early_selfassess": "🥺",
         "started_selfassess": "😄",
         "disengaged_selfassess": "🙂",
@@ -163,7 +163,7 @@ class ToActionStatus(StatusBase):
 
     TO_SYMBOLS = {
         "to_approve_proof": "🛂",
-        "to_approve_selfassess": "5️",
+        "to_approve_selfassess": "5 ",
         "to_approve_miniexam": "💯",
         "to_withdraw": "🪦",
         "due_reminder": "⏰",
