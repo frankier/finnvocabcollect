@@ -74,7 +74,7 @@
                 <select class="mv1" id="select_{{ word.id }}" name="defn_type" required
                 _="
                 on change or load
-                set the disabled of #text_{{ word.id}} to (my value is 'donotknow')
+                set the readonly of #text_{{ word.id}} to (my value is 'donotknow')
                 then set the required of #text_{{ word.id}} to (my value is not 'donotknow')
                 then send validityChange(valid:me.validity.valid and (#text_{{ word.id}}.validity.valid)) to parentElement of me 
 
