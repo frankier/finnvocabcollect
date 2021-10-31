@@ -565,6 +565,8 @@ async def miniexam():
                 response_lang = MiniexamResponseLanguage.en
             elif defn_type.endswith("_hu"):
                 response_lang = MiniexamResponseLanguage.hu
+            elif defn_type.endswith("_fi"):
+                response_lang = MiniexamResponseLanguage.fi
             else:
                 response_lang = None
             if defn_type.startswith("definition_"):
