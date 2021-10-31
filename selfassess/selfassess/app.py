@@ -478,7 +478,8 @@ async def selfassess():
     )).scalars().first()
     if next_response_slot is None:
         # Done
-        await finalise_selfassess(user)
+        if user.selfassess_finish_date is None:
+            await finalise_selfassess(user)
         await flash(
             "Self assessment finished. "
             "Well done! Now proceed to the mini-exam."
