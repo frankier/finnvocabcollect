@@ -183,6 +183,7 @@ class MiniexamResponseLanguage(enum.Enum):
     en = 1
     hu = 2
     ru = 3
+    fi = 4
 
 
 @enum.unique
