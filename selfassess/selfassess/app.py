@@ -517,6 +517,27 @@ async def echo_body():
     )
 
 
+@app.route("/echoform", methods=['POST'])
+async def echo_form():
+    form = await request.form
+    keys = list(form.keys())
+    resp = str(len(keys)) + "\t" + repr(keys) + "\n\n"
+    for key in keys:
+        values = form.getlist(key)
+        resp += (
+            key +
+            "\t" +
+            str(len(values)) +
+            "\t" +
+            "\t".join(values) +
+            "\n\n"
+        )
+    return QuartResponse(
+        resp,
+        mimetype="text/plain"
+    )
+
+
 @app.route("/miniexam", methods=['GET', 'POST'])
 @user_required
 async def miniexam():
