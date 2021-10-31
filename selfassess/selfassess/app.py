@@ -508,6 +508,15 @@ async def selfassess():
     )
 
 
+@app.route("/echobody", methods=['POST'])
+async def echo_body():
+    data = await request.data
+    return QuartResponse(
+        f"{len(data)}\n\n{data}",
+        mimetype="text/plain"
+    )
+
+
 @app.route("/miniexam", methods=['GET', 'POST'])
 @user_required
 async def miniexam():
