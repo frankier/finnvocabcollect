@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block body %}
+<style type="text/css">
+@media screen and (min-width:30em) {
+    .cols2-ns {
+        column-count: 2;
+    }
+}
+</style>
+<input
+    type="hidden"
+    name="event"
+    value="miniexamwindowfocus"
+    hx-post="{{ url_for("track") }}"
+    hx-trigger="focus from:window">
+<input
+    type="hidden"
+    name="event"
+    value="miniexamwindowblur"
+    hx-post="{{ url_for("track") }}"
+    hx-trigger="blur from:window">
+<form
+     id="miniexamform"
+     method="post"
+     class="mv5 mt0 mw7 center-ns mh2"
+     action="{{ url_for("fixup_miniexam") }}"
+>
+    <input
+        type="hidden"
+        name="event"
+        value="miniexaminput"
+        hx-post="{{ url_for("track") }}"
+        hx-trigger="input from:#miniexamform throttle:1s">
+    <div class="f4 lh-copy pv3-ns b--dashed-ns mb5-ns">
+        <p class="f3 pa1 ma4 tc">
+            Please demonstrate your knowledge of the following words.
+        </p>
+        <ul>
+            <li class="mv2">
+                For each word, try to translate or define the word into
+                <ol>
+                    <li>Your native language</li>
+                    <li>English or</li>
+                    <li>Finnish</li>
+                </ol>
+                <span class="dib w4-ns"></span>&mdash; in that order of preference.
+            </li>
+            <li class="mv2">
+                If you cannot do this, instead give your best guess of the topic of the word i.e. completing the sentence "this word has something to do with&mldr;".
+            </li>
+            <li class="mv2">
+                If you are absolutely unable to attempt any of the other options then you may select that that you do not know the word.
+            </li>
+        </ul>
+        <p class="f3 pa1 ma4 tc i">
+            For each word, pick the correct option for the type of answer you provide!
+        </p>
+        <p class="f3 pa1 ma4 tc i">
+            You can pick a different option for each word.
+        </p>
+    </div>
+    <ul class="list pa0 cols2-ns">
+        {% for slot in resps %}
+            <li class="pa4 tc tl-ns relative"
+            _="
+           on validityChange(valid)
+           if valid then add .bg-washed-green then remove .o-0 from #tick_{{ slot.word.id }}
+           else remove .bg-washed-green then add .o-0 to #tick_{{ slot.word.id }}
+           ">
+                <span id="tick_{{ slot.word.id }}" class="absolute right-0 top-0 ma2 f3 dark-green o-0">✓</span>
+                <div class="f3 mb1 tc">{{ slot.word.word }}</div>
+                <input type="hidden" name="word_id" value="{{ slot.word.id }}">
+                <input type="hidden" name="resp_id" value="{{ slot.resp.id }}">
+                <input type="hidden" name="slot_id" value="{{ slot.slot.id }}">
+                <select class="mv1" id="select_{{ slot.word.id }}" name="defn_type" required
+                _="
+                on change or load
+                set the readonly of #text_{{ slot.word.id}} to (my value is 'donotknow')
+                then set the required of #text_{{ slot.word.id}} to (my value is not 'donotknow')
+                then send validityChange(valid:me.validity.valid and (#text_{{ slot.word.id}}.validity.valid)) to parentElement of me 
+
+                on input call me.setCustomValidity('')
+                on invalid call me.setCustomValidity('Please select the type of answer you are giving for this word')
+                ">
+                    <option hidden></option>
+                    {% for language in languages %}
+                        <option
+                            {% if slot.defn_type == ("definition_" ~ language.language) %}
+                                selected
+                            {% endif %}
+                            value="definition_{{ language.language }}">{{ language.display_name() }} translation</option>
+                    {% endfor %}
+                    {% for language in languages %}
+                        <option
+                            {% if slot.defn_type == ("topic_" ~ language.language) %}
+                                selected
+                            {% endif %}
+                            value="topic_{{ language.language }}">{{ language.display_name() }} topic</option>
+                    {% endfor %}
+                    <option
+                        {% if slot.defn_type == "donotknow" %}
+                            selected
+                        {% endif %}
+                        value="donotknow">Do not know</option>
+                </select> 
+                <input class="mt1 border-box w-100" id="text_{{ slot.word.id }}" name="response" value="{{ slot.resp.response }}" required
+                _="
+                on change send validityChange(valid:(#select_{{ slot.word.id }}.validity.valid) and me.validity.valid) to parentElement of me
+
+                on input call me.setCustomValidity('')
+                on invalid call me.setCustomValidity('Please fill this in or select \'Do not know\'')
+                ">
+            </li>
+        {% endfor %}
+    </ul>
+    <button type="submit" class="pa2 ma1 f1 center db">Submit</button>
+</form>
+{% endblock %}

@@ -67,6 +67,7 @@ class Participant(Base):
     miniexam_start_date = Column(DateTime)
     miniexam_finish_date = Column(DateTime)
     miniexam_accept_date = Column(DateTime)
+    miniexam_fixup_date = Column(DateTime)
     complete_deadline = Column(Date, nullable=False)
     next_response = Column(Integer, default=0)
     undo = Column(Boolean, default=False)
@@ -125,7 +126,11 @@ class Word(Base):
     word = Column(String, unique=True, nullable=False)
 
     response_slots = relationship("ResponseSlot", back_populates="word")
-    miniexam_slots = relationship("MiniexamSlot", back_populates="word")
+    miniexam_slots = relationship(
+        "MiniexamSlot",
+        back_populates="word",
+        order_by="MiniexamSlot.miniexam_order"
+    )
 
 
 class ResponseSlot(Base):
@@ -198,9 +203,9 @@ class MiniexamResponse(Base):
 
     id = Column(Integer, primary_key=True)
     miniexam_slot_id = Column(Integer, ForeignKey('miniexam_slot.id'), nullable=False, index=True)
-    timestamp = Column(DateTime, nullable=False)
+    timestamp = Column(DateTime, nullable=True)
     response_lang = Column(Enum(MiniexamResponseLanguage), nullable=True)
-    response_type = Column(Enum(MiniexamResponseType), nullable=False)
+    response_type = Column(Enum(MiniexamResponseType), nullable=True)
     response = Column(String, nullable=False)
     mark = Column(Integer)
 

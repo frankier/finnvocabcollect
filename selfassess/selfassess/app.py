@@ -539,6 +539,55 @@ async def echo_form():
     )
 
 
+def decode_defn_type(defn_type):
+    if defn_type.endswith("_ru"):
+        response_lang = MiniexamResponseLanguage.ru
+    elif defn_type.endswith("_en"):
+        response_lang = MiniexamResponseLanguage.en
+    elif defn_type.endswith("_hu"):
+        response_lang = MiniexamResponseLanguage.hu
+    elif defn_type.endswith("_fi"):
+        response_lang = MiniexamResponseLanguage.fi
+    else:
+        response_lang = None
+    if defn_type.startswith("definition_"):
+        response_type = MiniexamResponseType.trans_defn
+    elif defn_type.startswith("topic_"):
+        response_type = MiniexamResponseType.topic
+    else:
+        response_type = MiniexamResponseType.donotknow
+    return response_type, response_lang
+
+
+def encode_defn_type(response_type, response_lang):
+    if response_lang == MiniexamResponseLanguage.fi:
+        ending = "_fi"
+    elif response_lang == MiniexamResponseLanguage.ru:
+        ending = "_ru"
+    elif response_lang == MiniexamResponseLanguage.en:
+        ending = "_en"
+    elif response_lang == MiniexamResponseLanguage.hu:
+        ending = "_hu"
+    else:
+        ending = ""
+    if response_type == MiniexamResponseType.donotknow:
+        return "donotknow"
+    elif response_type == MiniexamResponseType.topic:
+        return "topic" + ending
+    else:
+        return "definition" + ending
+
+
+async def user_languages(dbsess, user):
+    native_lang_res = await dbsess.execute(native_language(user))
+    native_lang = native_lang_res.scalars().first().language
+    languages = [langcodes.get(native_lang)]
+    if native_lang != "en":
+        languages.append(langcodes.get("en"))
+    languages.append(langcodes.get("fi"))
+    return languages
+
+
 @app.route("/miniexam", methods=['GET', 'POST'])
 @user_required
 async def miniexam():
@@ -547,7 +596,16 @@ async def miniexam():
         user.miniexam_start_date = datetime.datetime.now()
         await dbsess.commit()
     if request.method == 'POST':
+        data = await request.data
+        print("data", len(data), data)
         form = await request.form
+        print(len(form.getlist("word_id", type=int)))
+        print(len(set(form.getlist("word_id", type=int))))
+        print(form.getlist("word_id", type=int))
+        print(len(form.getlist("defn_type")))
+        print(form.getlist("defn_type"))
+        print(len(form.getlist("response")))
+        print(form.getlist("response"))
         zipped = zip(
             form.getlist("word_id", type=int),
             form.getlist("defn_type"),
@@ -560,22 +618,8 @@ async def miniexam():
                     MiniexamSlot.word_id == word_id,
                 )
             )).scalars().first()
-            if defn_type.endswith("_ru"):
-                response_lang = MiniexamResponseLanguage.ru
-            elif defn_type.endswith("_en"):
-                response_lang = MiniexamResponseLanguage.en
-            elif defn_type.endswith("_hu"):
-                response_lang = MiniexamResponseLanguage.hu
-            elif defn_type.endswith("_fi"):
-                response_lang = MiniexamResponseLanguage.fi
-            else:
-                response_lang = None
-            if defn_type.startswith("definition_"):
-                response_type = MiniexamResponseType.trans_defn
-            elif defn_type.startswith("topic_"):
-                response_type = MiniexamResponseType.topic
-            else:
-                response_type = MiniexamResponseType.donotknow
+            print(miniexam_slot.id)
+            response_type, response_lang = decode_defn_type(defn_type)
             dbsess.add(MiniexamResponse(
                 miniexam_slot_id=miniexam_slot.id,
                 timestamp=datetime.datetime.now(),
@@ -587,6 +631,7 @@ async def miniexam():
                     else ""
                 ),
             ))
+        raise Exception("Blah")
         user.miniexam_finish_date = datetime.datetime.now()
         await dbsess.commit()
         await flash(
@@ -603,15 +648,71 @@ async def miniexam():
                 MiniexamSlot.miniexam_order
             )
         )).scalars()
-        native_lang_res = await dbsess.execute(native_language(user))
-        native_lang = native_lang_res.scalars().first().language
-        languages = [langcodes.get(native_lang)]
-        if native_lang != "en":
-            languages.append(langcodes.get("en"))
-        languages.append(langcodes.get("fi"))
+        languages = await user_languages(dbsess, user)
         return await render_template(
             "miniexam.html",
             words=words,
+            languages=languages
+        )
+
+
+@app.route('/fixup-miniexam', methods=['GET', 'POST'])
+async def fixup_miniexam():
+    user = await current_user
+    if user is None:
+        if "token" in request.args:
+            return redirect(url_for("start", token=request.args["token"], next=request.path))
+        else:
+            abort(401)
+    user = (await dbsess.execute(select(Participant).filter_by(id=user.id).options(
+        joinedload(Participant.miniexam_slots).options(
+            joinedload(MiniexamSlot.word),
+            joinedload(MiniexamSlot.responses)
+        ),
+    ))).scalars().first()
+    if user.miniexam_fixup_date is None:
+        user.miniexam_fixup_date = datetime.datetime.now()
+        await dbsess.commit()
+    if request.method == 'POST':
+        form = await request.form
+        resp_info = {
+            k: (t, r)
+            for k, t, r in zip(
+                form.getlist("resp_id", type=int),
+                form.getlist("defn_type"),
+                form.getlist("response"),
+            )
+        }
+        resps = (await dbsess.execute(
+            select(MiniexamResponse).
+            filter(MiniexamResponse.id.in_(resp_info.keys()))
+        )).scalars()
+        for resp in resps:
+            defn_type, resp_text = resp_info[resp.id]
+            response_type, response_lang = decode_defn_type(defn_type)
+            resp.timestamp = datetime.datetime.now()
+            resp.response_lang = response_lang
+            resp.response_type = response_type
+            resp.response = resp_text
+        await dbsess.commit()
+        await flash(
+            "Thank you very much for providing the missing data."
+        )
+        return redirect(url_for("overview"))
+    else:
+        resps = []
+        for slot in user.miniexam_slots:
+            resp = slot.responses[-1]
+            resps.append({
+                "word": slot.word,
+                "resp": resp,
+                "defn_type": encode_defn_type(resp.response_type, resp.response_lang),
+                "slot": slot,
+            })
+        languages = await user_languages(dbsess, user)
+        return await render_template(
+            "miniexam_fixup.html",
+            resps=resps,
             languages=languages
         )
 
