@@ -81,7 +81,7 @@
                 on input call me.setCustomValidity('')
                 on invalid call me.setCustomValidity('Please select the type of answer you are giving for this word')
                 ">
-                    <option></option>
+                    <option hidden></option>
                     {% for language in languages %}
                         <option value="definition_{{ language.language }}">{{ language.display_name() }} translation</option>
                     {% endfor %}
