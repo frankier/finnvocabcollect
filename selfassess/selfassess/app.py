@@ -143,7 +143,7 @@ async def start(token):
     if participant.withdraw_date is not None:
         return redirect(url_for("withdrawn"))
     session[USER_SESSION_KEY] = token
-    return redirect(url_for("overview", token=token))
+    return redirect(request.args.get("next", url_for("overview", token=token)))
 
 
 _total_words = None
