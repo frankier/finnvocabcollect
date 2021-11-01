@@ -76,8 +76,10 @@
                 <select class="mv1" id="select_{{ slot.word.id }}" name="defn_type" required
                 _="
                 on change or load
-                set the readonly of #text_{{ slot.word.id}} to (my value is 'donotknow')
+                call me.setCustomValidity('')
+                then set the readOnly of #text_{{ slot.word.id}} to (my value is 'donotknow')
                 then set the required of #text_{{ slot.word.id}} to (my value is not 'donotknow')
+                then call document.getElementById('text_{{ slot.word.id}}').setCustomValidity('')
                 then send validityChange(valid:me.validity.valid and (#text_{{ slot.word.id}}.validity.valid)) to parentElement of me 
 
                 on input call me.setCustomValidity('')
@@ -104,9 +106,11 @@
                         {% endif %}
                         value="donotknow">Do not know</option>
                 </select> 
-                <input class="mt1 border-box w-100" id="text_{{ slot.word.id }}" name="response" value="{{ slot.resp.response }}" required
+                <input class="mt1 border-box w-100" type="textbox" id="text_{{ slot.word.id }}" name="response" value="{{ slot.resp.response }}" required
                 _="
-                on change send validityChange(valid:(#select_{{ slot.word.id }}.validity.valid) and me.validity.valid) to parentElement of me
+                on change
+                call me.setCustomValidity('')
+                then send validityChange(valid:(#select_{{ slot.word.id }}.validity.valid) and me.validity.valid) to parentElement of me
 
                 on input call me.setCustomValidity('')
                 on invalid call me.setCustomValidity('Please fill this in or select \'Do not know\'')
