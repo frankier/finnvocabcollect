@@ -72,10 +72,15 @@ def print_participant(lang, total_words, participant):
         total_mins % 60,
         len(selfassess_sessions)
     ))
-    print("  Mini-exam\n\tStarted: {}\n\tFinished: {}\n\tAccepted: {}\n\tCompletion deadline: {}".format(
+    print((
+        "  Mini-exam\n\tStarted: {}\n\tFinished: {}\n\tAccepted: {}\n\t"
+        "Fix-up start: {}\n\tFix up done: {}\n\tCompletion deadline: {}"
+    ).format(
         fmt_dt(participant.miniexam_start_date),
         fmt_dt(participant.miniexam_finish_date),
         fmt_dt(participant.miniexam_accept_date),
+        fmt_dt(participant.miniexam_fixup_date),
+        "no" if any((resp.response_type is None for slot in participant.miniexam_slots for resp in slot.responses)) else "yes",
         participant.complete_deadline,
     ))
 
