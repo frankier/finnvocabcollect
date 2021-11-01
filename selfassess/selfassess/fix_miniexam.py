@@ -20,7 +20,7 @@ partially retrieve your responses, but some are missing. Could you please
 follow the link below and re-enter the missing information to the best of your
 ability? Please only fill in the missing information.
 
-I truly am very sorry for the inconvience.
+I truly am very sorry for the inconvenience.
 
 {{ link }}
 
