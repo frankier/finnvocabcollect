@@ -363,11 +363,7 @@ async def ajax_redirect(url):
 async def get_miniexam_questions(user):
     grouped = {}
     for response, in (await dbsess.execute(recent_responses_for_participant(user))):
-        print("response")
-        print(response)
-        print(response.slot)
         grouped.setdefault(response.rating, []).append(response.slot.word_id)
-    print(grouped)
 
     num_groups = len(grouped)
     miniexam_questions = num_groups * MINIEXAM_QUESTIONS_PER_RATING
@@ -385,7 +381,6 @@ async def get_miniexam_questions(user):
             sampsize = miniexam_questions // (num_groups - idx)
             word_ids.extend(random.sample(response_slot, sampsize))
             miniexam_questions -= sampsize
-    print(len(word_ids), word_ids)
     random.shuffle(word_ids)
     return word_ids
 
@@ -597,15 +592,7 @@ async def miniexam():
         await dbsess.commit()
     if request.method == 'POST':
         data = await request.data
-        print("data", len(data), data)
         form = await request.form
-        print(len(form.getlist("word_id", type=int)))
-        print(len(set(form.getlist("word_id", type=int))))
-        print(form.getlist("word_id", type=int))
-        print(len(form.getlist("defn_type")))
-        print(form.getlist("defn_type"))
-        print(len(form.getlist("response")))
-        print(form.getlist("response"))
         zipped = zip(
             form.getlist("word_id", type=int),
             form.getlist("defn_type"),
@@ -618,7 +605,6 @@ async def miniexam():
                     MiniexamSlot.word_id == word_id,
                 )
             )).scalars().first()
-            print(miniexam_slot.id)
             response_type, response_lang = decode_defn_type(defn_type)
             dbsess.add(MiniexamResponse(
                 miniexam_slot_id=miniexam_slot.id,
@@ -631,7 +617,6 @@ async def miniexam():
                     else ""
                 ),
             ))
-        raise Exception("Blah")
         user.miniexam_finish_date = datetime.datetime.now()
         await dbsess.commit()
         await flash(
