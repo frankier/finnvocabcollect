@@ -15,6 +15,7 @@ import random
 import langcodes
 from .quali import CEFR_LEVELS_NATIVE, CEFR_SKILLS
 from functools import partial
+import sys
 
 
 EMAIL_TEMPLATE = Template("""
@@ -155,7 +156,7 @@ def prompts(email):
         resp = input("Confirm? (y/n) > ").strip().lower()
         if resp == "n":
             print("Exiting. Rerun with correct values.")
-            return
+            sys.exit(-1)
         elif resp == "y":
             print("Inserting")
             break
