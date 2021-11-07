@@ -18,7 +18,7 @@ def main(db_in, tsv_out, include_session):
             participant.id as participant,
             {session_col}
             selfassess_response.word,
-            selfassess_response.time_secs,
+            selfassess_response.time_usecs,
             selfassess_response.rating
         from
             selfassess_response
