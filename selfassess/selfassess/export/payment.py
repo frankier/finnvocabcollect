@@ -41,7 +41,8 @@ def main(csvout):
         "name": names,
         "surname": surnames,
         "email": email,
-        "period": period,
+        "period (hours)": period,
+        "amount (€)": "200",
     })
     df.to_csv(csvout, float_format='%.2f')
 
