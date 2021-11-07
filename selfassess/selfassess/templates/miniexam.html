@@ -77,7 +77,7 @@
                 call me.setCustomValidity('')
                 then set the readOnly of #text_{{ word.id}} to (my value is 'donotknow')
                 then set the required of #text_{{ word.id}} to (my value is not 'donotknow')
-                then call document.getElementById('text_{{ slot.word.id}}').setCustomValidity('')
+                then call document.getElementById('text_{{ word.id}}').setCustomValidity('')
                 then send validityChange(valid:me.validity.valid and (#text_{{ word.id}}.validity.valid)) to parentElement of me 
 
                 on input call me.setCustomValidity('')
