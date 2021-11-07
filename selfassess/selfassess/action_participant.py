@@ -12,7 +12,7 @@ from .utils import get_session
         "proof_accept",
         "selfassess_accept",
         # Moved to selfassess.mark
-        #"miniexam_accept",
+        "miniexam_accept",
         "withdraw"
     ])
 )
