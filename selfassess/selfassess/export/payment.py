@@ -3,8 +3,8 @@ from pandas import DataFrame
 
 from selfassess.utils import get_session
 from selfassess.database import Participant
+from selfassess.queries import participant_timeline_query
 from .utils import get_participant_sessions
-from .queries import participant_timeline_query
 
 
 @click.command()
