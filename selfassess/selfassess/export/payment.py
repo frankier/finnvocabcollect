@@ -9,7 +9,8 @@ from .utils import get_participant_sessions
 
 @click.command()
 @click.argument("csvout", type=click.Path())
-def main(csvout):
+@click.argument("include_email", nargs=-1)
+def main(csvout, include_email):
     """
     Given name
 
@@ -24,8 +25,11 @@ def main(csvout):
     names = []
     surnames = []
     email = []
-    period = []
+    period_start = []
+    period_end = []
     for participant in participants:
+        if include_email and participant.email not in include_email:
+            continue
         names.append(participant.given_name)
         surnames.append(participant.surname)
         email.append(participant.email)
@@ -36,15 +40,17 @@ def main(csvout):
                 in get_participant_sessions(participant)
             ))
         ) / (60 * 60)
-        period.append(int(time * 4 + 0.5) / 4)
+        period_start.append(participant.accept_date.date().isoformat())
+        period_end.append(participant.miniexam_finish_date.date().isoformat())
     df = DataFrame({
         "name": names,
         "surname": surnames,
         "email": email,
-        "period (hours)": period,
+        "period start": period_start,
+        "period end": period_end,
         "amount (€)": "200",
     })
-    df.to_csv(csvout, float_format='%.2f')
+    df.to_csv(csvout, sep='\t')
 
 
 if __name__ == "__main__":
