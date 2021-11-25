@@ -1,7 +1,7 @@
 import click
 from pandas import DataFrame
 
-from selfassess.database import Participant
+from selfassess.database import Participant, MiniexamResponseType
 from selfassess.utils import get_session
 
 
@@ -29,7 +29,7 @@ def main(outf, email):
                 resp.response_lang.name if resp.response_lang is not None else "",
                 resp.response_type.name,
                 resp.response,
-                "",
+                "1b" if resp.response_type == MiniexamResponseType.donotknow else "",
                 ""
             ))
     df = DataFrame.from_records(
