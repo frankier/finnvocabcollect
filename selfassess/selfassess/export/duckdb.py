@@ -1,5 +1,6 @@
 import click
 import duckdb
+import pandas
 from selfassess.utils import get_session
 from selfassess.quali import CEFR_SKILLS
 from .utils import get_participant_sessions
@@ -54,6 +55,7 @@ def setup_duckdb(db_out):
         rating int
     );
     create table miniexam_response (
+        id int primary key,
         participant_id int,
         word varchar,
         type varchar,
@@ -61,14 +63,21 @@ def setup_duckdb(db_out):
         response varchar,
         grade int
     );
+    create table miniexam_mark (
+        selfassess_response_id int,
+        marker varchar,
+        mark varchar
+    );
     """)
     return conn
+
+
+# .mode csv\n.sep '\t'\nCREATE TABLE $3 AS SELECT * FROM read_csv_auto('head.tsv', HEADER=TRUE)
 
 
 def flush_rows(schema, conn, rows):
     if not rows:
         return
-    import pandas
     df = pandas.DataFrame(rows)
     conn.register('df', df)
     conn.execute(f"INSERT INTO {schema} SELECT * FROM df;")
@@ -85,14 +94,26 @@ def flush_rows(schema, conn, rows):
     default="all"
 )
 @click.option(
+    "--marking",
+    type=click.File("r"),
+    multiple=True,
+)
+@click.option(
     "--use-original-ids/--renumber-ids",
 )
-def main(db_out, which, use_original_ids):
+def main(db_out, which, marking, use_original_ids):
     # Inefficient ORM usage here
     # -- but there are 15 items and this runs as a batch job
     ddb_conn = setup_duckdb(db_out)
     sqlite_sess = get_session()
     participants = sqlite_sess.execute(participant_timeline_query()).scalars()
+    mark_lookups = {}
+    for annotator_num, mark_file in enumerate(marking, start=1):
+        df = pandas.read_csv(mark_file, sep="\t", header=0)
+        for response_id, mark in zip(df["response_id"], df["mark"]):
+            row = (f"ann{annotator_num}", mark)
+            mark_lookups.setdefault(int(response_id), []).append(row)
+    miniexam_response_id = 0
     session_id = 0
     if not use_original_ids:
         pid = 0
@@ -173,6 +194,7 @@ def main(db_out, which, use_original_ids):
             session_id += 1
         flush_rows("selfassess_response", ddb_conn, response_vals)
         miniexam_responses = []
+        miniexam_marks = []
         for miniexam_slot in participant.miniexam_slots:
             latest_timestamp = None
             latest_response = None
@@ -184,6 +206,7 @@ def main(db_out, which, use_original_ids):
             if not latest_response:
                 continue
             miniexam_responses.append((
+                miniexam_response_id,
                 pid,
                 miniexam_slot.word.word,
                 latest_response.response_lang.name if latest_response.response_lang is not None else None,
@@ -191,7 +214,13 @@ def main(db_out, which, use_original_ids):
                 latest_response.response,
                 latest_response.mark
             ))
+            for marker, mark in mark_lookups[latest_response.id]:
+                miniexam_marks.append((
+                    miniexam_response_id, marker, mark
+                ))
+            miniexam_response_id += 1
         flush_rows("miniexam_response", ddb_conn, miniexam_responses)
+        flush_rows("miniexam_mark", ddb_conn, miniexam_marks)
         if not use_original_ids:
             pid += 1
 
