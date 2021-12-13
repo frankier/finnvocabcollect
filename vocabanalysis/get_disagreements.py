@@ -1,50 +1,60 @@
 import click
+import duckdb
 import pandas
+from os import makedirs
+from os.path import join as pjoin
 
 from sklearn.metrics import confusion_matrix, cohen_kappa_score, ConfusionMatrixDisplay
 from matplotlib import pyplot as mpl
+
+from .queries import MARKER_COMPARE_QUERY
 
 
 def clean_mark(col):
     return col.map(lambda x: int(x.strip().strip("b")))
 
 
-@click.command()
-@click.argument("annotation_a", type=click.File("r"))
-@click.argument("annotation_b", type=click.File("r"))
-@click.argument("figout", type=click.Path(), required=False)
-def main(annotation_a, annotation_b, figout):
-    df_a = pandas.read_csv(annotation_a, sep="\t")
-    df_b = pandas.read_csv(annotation_b, sep="\t")
-    df_joined = pandas.merge(
-        df_a,
-        df_b.drop(columns=["participant_id", "word", "lang", "type", "resp"]),
-        on="response_id"
-    )
-    missing = df_joined[df_joined[["mark_x", "mark_y"]].isna().any(axis=1)]
-    print(missing)
-    df_clean = df_joined[["mark_x", "mark_y"]].dropna()
-    df_clean["mark_x"] = clean_mark(df_clean["mark_x"])
-    df_clean["mark_y"] = clean_mark(df_clean["mark_y"])
+def dump_disagreements(df, figout):
     print(
         "Cohen's Kappa",
-        cohen_kappa_score(df_clean["mark_x"], df_clean["mark_y"])
+        cohen_kappa_score(df["mark1"], df["mark2"])
     )
     print(
         "QWK",
         cohen_kappa_score(
-            df_clean["mark_x"],
-            df_clean["mark_y"],
+            df["mark1"],
+            df["mark2"],
             weights="quadratic"
         )
     )
     print("Confusion matrix")
-    confmat = confusion_matrix(df_clean["mark_x"], df_clean["mark_y"])
-    print(df_joined[df_joined["mark_x"] != df_joined["mark_y"]])
+    confmat = confusion_matrix(df["mark1"], df["mark2"])
+    print(df[df["mark1"] != df["mark2"]])
     ConfusionMatrixDisplay(confmat, display_labels=range(1, 6)).plot()
     mpl.ylabel("Annotator 1")
     mpl.xlabel("Annotator 2")
     mpl.savefig(figout)
+
+
+@click.command()
+@click.argument("dbin", type=click.Path())
+@click.argument("figout", type=click.Path())
+def main(dbin, figout):
+    conn = duckdb.connect(dbin)
+    df = conn.execute(MARKER_COMPARE_QUERY).fetchdf()
+    print(df)
+    df["mark1"] = clean_mark(df["mark1"])
+    df["mark2"] = clean_mark(df["mark2"])
+    makedirs(figout, exist_ok=True)
+    dump_disagreements(df, pjoin(figout, "all.png"))
+    for pid, participant_df in df.groupby("participant_id"):
+        print()
+        print(f"Participant {pid}")
+        dump_disagreements(participant_df, pjoin(figout, f"p{pid}.png"))
+    for lang, lang_df in df.groupby("language"):
+        print()
+        print(f"Language {lang}")
+        dump_disagreements(lang_df, pjoin(figout, f"{lang}.png"))
 
 
 if __name__ == "__main__":
