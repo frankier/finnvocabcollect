@@ -5,7 +5,7 @@ description = ""
 authors = ["Frankie Robertson <frankie@robertson.name>"]
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.9,<3.11"
 pandas = "^1.2.3"
 click = "^8.0.0"
 lxml = "^4.6.2"
@@ -17,7 +17,9 @@ gensim = "^4.1.0"
 seaborn = "^0.11.2"
 finntk = "^0.0.73"
 orjson = "^3.6.3"
-freqknowfit = {git = "https://github.com/frankier/freqknowfit.git", rev = "main"}
+duckdb = "^0.3.1"
+freqknowfit = {git = "https://github.com/frankier/freqknowfit.git", rev = "b0ea2550df69570114a079628c4212e2836d640c"}
+scipy = "^1.7.3"
 
 [tool.poetry.dev-dependencies]
 
