@@ -107,7 +107,7 @@ rule make_full_wordlist:
     output:
         wordlist_full = "wordlist_full.parquet"
     shell:
-        "python -m finnwordlist.make_wordlist "
+        "python -m finnwordlist.make_full_wordlist "
         "{input.clean_df} {output.wordlist_full}"
 
 
