@@ -40,11 +40,6 @@ def plot_confmat(df, figout):
     mpl.savefig(figout)
 
 
-def not_extreme_disagreement(grp):
-    sorted_grp = sorted(grp["mark"])
-    return not (sorted_grp[0] <= 2 and sorted_grp[1] >= 4)
-
-
 @click.command()
 @click.argument("dbin", type=click.Path())
 @click.argument("figout", type=click.Path())
@@ -52,20 +47,7 @@ def not_extreme_disagreement(grp):
 def main(dbin, figout, filter):
     conn = duckdb.connect(dbin)
     df = conn.execute(MARK_TRANSLATION_COMPARE_QUERY).fetchdf()
-    df = df.dropna()
     df["mark"] = clean_mark(df["mark"])
-    if filter == "any-disagree":
-        df = df.groupby(["participant_id", "word"]).filter(
-            lambda grp: len(np.unique(grp["mark"])) == 1
-        )
-        print(df)
-        df = df.groupby(["participant_id", "word"]).min()
-        print(df)
-    elif filter == "extreme-disagree":
-        df = df.groupby(["participant_id", "word"]).filter(not_extreme_disagreement)
-        print(df)
-        df = df.groupby(["participant_id", "word"]).min()
-        print(df)
     makedirs(figout, exist_ok=True)
     print("* All *")
     plot_confmat(df, pjoin(figout, "all.png"))

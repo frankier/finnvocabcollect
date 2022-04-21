@@ -23,7 +23,6 @@ select
     participant_language.language,
     miniexam_response.word,
     selfassess_response.rating,
-    miniexam_mark.marker,
     miniexam_mark.mark
 from selfassess_session
 join selfassess_response
@@ -36,5 +35,6 @@ join miniexam_mark
 join participant_language
     on selfassess_session.participant_id = participant_language.participant_id
 where
-    participant_language.level = 7;
+    participant_language.level = 7
+    and miniexam_mark.marker = 'final';
 """
