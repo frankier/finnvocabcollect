@@ -25,7 +25,6 @@ select
     participant_language.language,
     miniexam_response.word,
     selfassess_response.rating,
-    miniexam_mark.marker,
     miniexam_mark.mark
 from selfassess_session
 join selfassess_response
@@ -38,7 +37,8 @@ join miniexam_mark
 join participant_language
     on selfassess_session.participant_id = participant_language.participant_id
 where
-    participant_language.level = 7;
+    participant_language.level = 7
+    and miniexam_mark.marker = 'final';
 """
 
 
@@ -46,21 +46,14 @@ def clean_mark(col):
     return col.map(lambda x: int(x.strip().strip("b")))
 
 
-def not_extreme_disagreement(grp):
-    sorted_grp = sorted(grp["mark"])
-    return not (sorted_grp[0] <= 2 and sorted_grp[1] >= 4)
-
-
 @click.command()
 @click.argument("db", type=click.Path())
 def main(db):
     conn = duckdb.connect(db)
-    conn.execute("drop table reliabilities;")
+    conn.execute("drop table if exists reliabilities;")
     conn.execute(RELIABILITIES_TABLE)
     df_all = conn.execute(MARK_TRANSLATION_COMPARE_QUERY).fetchdf()
     df_all["mark"] = clean_mark(df_all["mark"])
-    df_all = df_all.groupby(["participant_id", "word"]).filter(not_extreme_disagreement)
-    df_all = df_all.groupby(["participant_id", "word"]).min()
     for pid, df in df_all.groupby("participant_id"):
         rating_5 = (df["rating"] == 5).sum()
         reliability_5 = ((df["rating"] == 5) & (df["mark"] >= 4)).sum() / rating_5
