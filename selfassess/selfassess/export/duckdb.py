@@ -1,5 +1,6 @@
 import click
 import duckdb
+import numpy
 import pandas
 from selfassess.utils import get_session
 from selfassess.quali import CEFR_SKILLS
@@ -19,6 +20,7 @@ PARTICIPANT_TABLE = """
 create table participant (
     id int primary key,
     {}
+    lived_in_finland int,
     proof_age varchar,
     proof_type varchar,
     miniexam_time_secs int,
@@ -95,7 +97,6 @@ def flush_rows(schema, conn, rows):
 )
 @click.option(
     "--marking",
-    type=click.File("r"),
     multiple=True,
 )
 @click.option(
@@ -108,11 +109,21 @@ def main(db_out, which, marking, use_original_ids):
     sqlite_sess = get_session()
     participants = sqlite_sess.execute(participant_timeline_query()).scalars()
     mark_lookups = {}
-    for annotator_num, mark_file in enumerate(marking, start=1):
-        df = pandas.read_csv(mark_file, sep="\t", header=0)
+    for annotator_num, mark_info in enumerate(marking, start=1):
+        label, path = mark_info.split(":", 1)
+        with open(path, "r") as mark_file:
+            df = pandas.read_csv(mark_file, sep="\t", header=0, dtype=numpy.object_)
+        df = df[~df["mark"].isna()]
         for response_id, mark in zip(df["response_id"], df["mark"]):
-            row = (f"ann{annotator_num}", mark)
-            mark_lookups.setdefault(int(response_id), []).append(row)
+            mark_lookups.setdefault(int(response_id), {})[label] = mark
+    for response_id, marks in mark_lookups.items():
+        if marks["ann1"] == "1b" or marks["ann2"] == "1b":
+            marks["final"] = "1b"
+        elif "corr" in marks:
+            marks["final"] = marks["corr"]
+        else:
+            marks["final"] = str(min(int(marks["ann1"]), int(marks["ann2"])))
+
     miniexam_response_id = 0
     session_id = 0
     if not use_original_ids:
@@ -140,7 +151,7 @@ def main(db_out, which, marking, use_original_ids):
             in miniexam_sessions
         )) + 0.5)
         ddb_conn.execute(
-            "insert into participant values (?, {} ?, ?, ?, ?)".format(
+            "insert into participant values (?, {} ?, ?, ?, ?, ?)".format(
                 "?, " * len(CEFR_FIELDS)
             ),
             [
@@ -150,6 +161,7 @@ def main(db_out, which, marking, use_original_ids):
                     for cefr_field
                     in CEFR_FIELDS
                 ),
+                participant.lived_in_finland,
                 participant.proof_age.name,
                 participant.proof_type.name,
                 miniexam_time_secs,
@@ -168,6 +180,7 @@ def main(db_out, which, marking, use_original_ids):
             participant_languages
         )
         response_vals = []
+        word_rating = {}
         for selfassess_session in selfassess_sessions:
             session_date = selfassess_session["first_timestamp"].date()
             ddb_conn.execute(
@@ -214,7 +227,7 @@ def main(db_out, which, marking, use_original_ids):
                 latest_response.response,
                 latest_response.mark
             ))
-            for marker, mark in mark_lookups[latest_response.id]:
+            for marker, mark in mark_lookups[latest_response.id].items():
                 miniexam_marks.append((
                     miniexam_response_id, marker, mark
                 ))
