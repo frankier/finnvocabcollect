@@ -122,7 +122,7 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 
 [[package]]
 name = "duckdb"
-version = "0.3.1"
+version = "0.3.4.dev72"
 description = "DuckDB embedded database"
 category = "main"
 optional = false
@@ -982,7 +982,7 @@ python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,>=2.7"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9,<3.11"
-content-hash = "c7617fc281070e95964eee90e802f886ae6c66e59fb1f9314127c6abebbdbd1b"
+content-hash = "4cc2064d62c528c8cc2a3c78279f44c7256b8d1160555494f57ae3db529896d2"
 
 [metadata.files]
 appdirs = [
@@ -1056,35 +1056,44 @@ docutils = [
     {file = "docutils-0.18.1.tar.gz", hash = "sha256:679987caf361a7539d76e584cbeddc311e3aee937877c87346f31debc63e9d06"},
 ]
 duckdb = [
-    {file = "duckdb-0.3.1-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:71b48e5d98270c56319b2fa51e6e3d7a3ba08e01c9fc7e7e97864c2f678eeb96"},
-    {file = "duckdb-0.3.1-cp36-cp36m-win32.whl", hash = "sha256:5784d909d5414276506191e795a931ece366e8b7010dcf3b5fe3b8a93c0236a5"},
-    {file = "duckdb-0.3.1-cp36-cp36m-win_amd64.whl", hash = "sha256:b1d5a6dc00371bcc200acb21a76b93f8dcca1c1fb9e4338b374950c15d83d91f"},
-    {file = "duckdb-0.3.1-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:11a85eb943a6637f667a914cc251e8eed246800b8348bf8deb055c0439267a15"},
-    {file = "duckdb-0.3.1-cp37-cp37m-manylinux_2_12_i686.manylinux2010_i686.whl", hash = "sha256:7bc5ac122313f3dba951a044c8bf2e6dcf64147c3fbb24a2b78aa21ee8c8fa53"},
-    {file = "duckdb-0.3.1-cp37-cp37m-manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:49574d8d5504002e170bd0e42754bd53d678b871cbd5de51028e9bbc6a338bee"},
-    {file = "duckdb-0.3.1-cp37-cp37m-musllinux_1_1_i686.whl", hash = "sha256:2de216dbae8452571be411bc2958d8be527ee11ddbbed33d7a4bf93f5c6abe55"},
-    {file = "duckdb-0.3.1-cp37-cp37m-musllinux_1_1_x86_64.whl", hash = "sha256:0394b1c7ab49e600aa3a8e019c33fca562603062eaec5f00e3877f7750a9797e"},
-    {file = "duckdb-0.3.1-cp37-cp37m-win32.whl", hash = "sha256:95c17676bebe2866b0addbc1d89cce188ebe6651723aed9b9ec27a2c1c3bd6ee"},
-    {file = "duckdb-0.3.1-cp37-cp37m-win_amd64.whl", hash = "sha256:b8fab6f8c7e14c615ee0169e21c1bb0f8bbe5d77d49de2b07e7c832de712e841"},
-    {file = "duckdb-0.3.1-cp38-cp38-macosx_10_9_universal2.whl", hash = "sha256:081b6dfe63ebc39d9d4b609ac3320ec0af7425c0ae034e32ccc3425d232ea29b"},
-    {file = "duckdb-0.3.1-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:f212138158fa86467d413b375fafa09151650bc382e41dca2894d8d111901b92"},
-    {file = "duckdb-0.3.1-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:f5da2ff0c0979cd316a59475ef87d81bc858d58e32b1f19db06a9542a78c8e48"},
-    {file = "duckdb-0.3.1-cp38-cp38-manylinux_2_12_i686.manylinux2010_i686.whl", hash = "sha256:c1488ab6fc6409c5c306569f19bafc1f32542398bc686e12a425900cbc061f08"},
-    {file = "duckdb-0.3.1-cp38-cp38-manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:8866a5913a1d4562cbd07cdcf05f1c48bbcd2050a61fc171232f8c68ca9b1a55"},
-    {file = "duckdb-0.3.1-cp38-cp38-musllinux_1_1_i686.whl", hash = "sha256:ef03e56f40bba5f662042e6b2973eec8ec6dbd80f1ad7dbb8579bb83662b7715"},
-    {file = "duckdb-0.3.1-cp38-cp38-musllinux_1_1_x86_64.whl", hash = "sha256:83bc6fd0d62d55319208204d9831fe2bb979b5ef4aaf5bc29209276117c9ef9b"},
-    {file = "duckdb-0.3.1-cp38-cp38-win32.whl", hash = "sha256:7bbbded9ce5f13acd84ab01fc6c5082597c914376fdd63d05501f84efe492f60"},
-    {file = "duckdb-0.3.1-cp38-cp38-win_amd64.whl", hash = "sha256:37004b04511b314cbda556e917c0f051f820949cb81ce040d065f6beb58c1401"},
-    {file = "duckdb-0.3.1-cp39-cp39-macosx_10_9_universal2.whl", hash = "sha256:0dada201ce7dea14c235973be3837f00498d57d63394ca4f02bf072e76974e8d"},
-    {file = "duckdb-0.3.1-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:3492dca430f16469c01352c851f528539d9263a4e433c160efd5fde68bebdae6"},
-    {file = "duckdb-0.3.1-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:f42f4a14e41dae7b6a726b5d5a5b8b05569b3075ad78ad327b6f0e8bf9b6dd6f"},
-    {file = "duckdb-0.3.1-cp39-cp39-manylinux_2_12_i686.manylinux2010_i686.whl", hash = "sha256:5c40faf4cbbb9031d47647feb28d30a2ad1c0af7717f800129012406eb7f1b1c"},
-    {file = "duckdb-0.3.1-cp39-cp39-manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:6a1d8f2643003595e8529bdd2f2717969ccf4eba5716fb31255703d453ed436b"},
-    {file = "duckdb-0.3.1-cp39-cp39-musllinux_1_1_i686.whl", hash = "sha256:462ec26e810b0630dc7e2a21c72c40877e4360935526f2c48fa8ea36fc6333d9"},
-    {file = "duckdb-0.3.1-cp39-cp39-musllinux_1_1_x86_64.whl", hash = "sha256:3098a4cbc1199104bcabd1a05e636976759eeb4c431fdadc784efd9a887c072a"},
-    {file = "duckdb-0.3.1-cp39-cp39-win32.whl", hash = "sha256:43303b8240f4a165c9384c38aa8367b50d0bc863de63adaa580d1dd98af7ed07"},
-    {file = "duckdb-0.3.1-cp39-cp39-win_amd64.whl", hash = "sha256:3ec18c8729a5fd2327557ebae4630560297316ebfe9f4845d7584990e56be818"},
-    {file = "duckdb-0.3.1.tar.gz", hash = "sha256:faace845653e4739444941209f98df9a835bfb841998e263d584f71a69659eab"},
+    {file = "duckdb-0.3.4.dev72-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:576fe46d9659e6cadc0f5158e7656fb041530f79a1e28424286b1f5a32954c31"},
+    {file = "duckdb-0.3.4.dev72-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:96eeeaff5545b6e0b53c1f8e1890559a575fdfac0ca14458de7b041c8659519a"},
+    {file = "duckdb-0.3.4.dev72-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:59862cf36a1fdbc51458db737a0852ce36ea9af37c9111e886ac8b4d2353b759"},
+    {file = "duckdb-0.3.4.dev72-cp310-cp310-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:8b9853aa46bb254dd9b0a2e836a332a0a74343ac945b9280786e1e6f9d18f47d"},
+    {file = "duckdb-0.3.4.dev72-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:f814c4742cdc31f7a4b1992e1c254e9efe96bc37dc5311e01ed10d8d2064103a"},
+    {file = "duckdb-0.3.4.dev72-cp310-cp310-musllinux_1_1_i686.whl", hash = "sha256:495c50d0955d297effb697586134167e397b41cad3dad724f89ab5e9a7bf62b9"},
+    {file = "duckdb-0.3.4.dev72-cp310-cp310-musllinux_1_1_x86_64.whl", hash = "sha256:c652c5d340906c8541203c64bbddba52747f89370510d0eee009965028c0d65f"},
+    {file = "duckdb-0.3.4.dev72-cp310-cp310-win32.whl", hash = "sha256:e4dd4aa501490e0660e868a8faaaa48f18cd43fd1f1b92ee6195e181ba0984dc"},
+    {file = "duckdb-0.3.4.dev72-cp310-cp310-win_amd64.whl", hash = "sha256:b2dd2532604ecbecdfe361e90086d1b577264208afbd9c235f3ef1b2e8d1d078"},
+    {file = "duckdb-0.3.4.dev72-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:32ba0b0a22e467cc6a23ee72895f1468f589698a52cf7134c97e987aa97fd2f9"},
+    {file = "duckdb-0.3.4.dev72-cp36-cp36m-win32.whl", hash = "sha256:06a8896ef41ac5abbd7979a2e7fbdcfae84a252cd677fdfa97103e6144d99561"},
+    {file = "duckdb-0.3.4.dev72-cp36-cp36m-win_amd64.whl", hash = "sha256:37c56b980f17e58eeaf598006d0107d42a3b8bbd04cf053a2943e3e55944a104"},
+    {file = "duckdb-0.3.4.dev72-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:9d6c2152288f5543de894732a1be63bd956edfd6d414a3d5456dc0ca885c5eef"},
+    {file = "duckdb-0.3.4.dev72-cp37-cp37m-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:fcb453455a376027ec193e54b8ec4bc304fa6450174c409968b325b563e2620c"},
+    {file = "duckdb-0.3.4.dev72-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:a46a8e23a20f81d1b34fd716bf3bd07fb35c45b0e33a3ce018aed359cf12c6a9"},
+    {file = "duckdb-0.3.4.dev72-cp37-cp37m-musllinux_1_1_i686.whl", hash = "sha256:c341e573aa0418e43eed24c59b927b043ba3a898f227234de64fa763baa2a44a"},
+    {file = "duckdb-0.3.4.dev72-cp37-cp37m-musllinux_1_1_x86_64.whl", hash = "sha256:65f5b26e83bae99eee5f6055183afb355a342b56206dcf8c0805ae20e78cc781"},
+    {file = "duckdb-0.3.4.dev72-cp37-cp37m-win32.whl", hash = "sha256:de61232458f5958123bc29eb2778c6b2730ef738bde917ff6f62a0adcaca2113"},
+    {file = "duckdb-0.3.4.dev72-cp37-cp37m-win_amd64.whl", hash = "sha256:103513c844e33e99fb93dd7d985aea89690c7057c79c536c29d6258eb9dc8b6a"},
+    {file = "duckdb-0.3.4.dev72-cp38-cp38-macosx_10_9_universal2.whl", hash = "sha256:37731c6d17cec038500eb9b489bc04331894146faa8dc1a3b2da61b2b428059f"},
+    {file = "duckdb-0.3.4.dev72-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:fac514c063db6af04212d473953fe8518fd51922c678153d2f12870b4a41b078"},
+    {file = "duckdb-0.3.4.dev72-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:485dc0c5946e8778fa43f5a1d2b5c3ed284b0b2df6851016fa6f54e21f462f7b"},
+    {file = "duckdb-0.3.4.dev72-cp38-cp38-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:09e40d499151edc8ece5820aa638650a0a5f844c578b18dc8aa1190743e10325"},
+    {file = "duckdb-0.3.4.dev72-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:2eae7d12dfff8db0a95ab57115936844bc2c5a9499a295a72c8e1630399b774a"},
+    {file = "duckdb-0.3.4.dev72-cp38-cp38-musllinux_1_1_i686.whl", hash = "sha256:b0021d3fb5e2a0cd8b4762c98be453f8180fee7b723f55b03bbea10024473c96"},
+    {file = "duckdb-0.3.4.dev72-cp38-cp38-musllinux_1_1_x86_64.whl", hash = "sha256:617636c1e3146400fd80bdb7e12c3b0813ce331d2df281ec02ea6054ca4254d1"},
+    {file = "duckdb-0.3.4.dev72-cp38-cp38-win32.whl", hash = "sha256:d0483d25d123203e0dd5755f2c97c12ab32744e0c00df2c557e33081409e1c0a"},
+    {file = "duckdb-0.3.4.dev72-cp38-cp38-win_amd64.whl", hash = "sha256:b14c1990216251e89177306daa29d51e1f3a386dd07b41a09f98e837026349d8"},
+    {file = "duckdb-0.3.4.dev72-cp39-cp39-macosx_10_9_universal2.whl", hash = "sha256:6fa85fdd5743d3eb1aa73fb387dfd7b5d1a08cd8eadbae536c28693e13d8e664"},
+    {file = "duckdb-0.3.4.dev72-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:427ac5974ecccf82da8d3e55e04cddf229defed0c5b3f7728148183507069414"},
+    {file = "duckdb-0.3.4.dev72-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:1ad7a06447c86d78801c4fe35b01546ce2f1a219d1bf44fe769a4e4c15a6c329"},
+    {file = "duckdb-0.3.4.dev72-cp39-cp39-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:ddcd60297f6d7190f65c775becc1bde5b94c9a2c4cf5b2737af55e941f68ba00"},
+    {file = "duckdb-0.3.4.dev72-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:813a99940818822abea5bd8cdadc93c0cedf01f12de3687daf9d93c9f2e48514"},
+    {file = "duckdb-0.3.4.dev72-cp39-cp39-musllinux_1_1_i686.whl", hash = "sha256:3a9a7c4a12857c239f6e95765d3f9caafb40fd6f1ef6bb3997ee58fc612e029b"},
+    {file = "duckdb-0.3.4.dev72-cp39-cp39-musllinux_1_1_x86_64.whl", hash = "sha256:53eb2c304b7863d942be57b05a460ea4eabe068415a142d1d5408738c24450ca"},
+    {file = "duckdb-0.3.4.dev72-cp39-cp39-win32.whl", hash = "sha256:e9cae516fb35f57d3388d409d38b90bcdfaab964b472f51dfbc00ce0df178d06"},
+    {file = "duckdb-0.3.4.dev72-cp39-cp39-win_amd64.whl", hash = "sha256:923855b23f603974679471e43d7ffb22a5cf965fe30b9e28fbddb3ff804475b5"},
+    {file = "duckdb-0.3.4.dev72.tar.gz", hash = "sha256:670ab551b3687d91828c0d57d2c5fbddeae363b1cb3e9b79023ca6e6373ef9c4"},
 ]
 filelock = [
     {file = "filelock-3.4.0-py3-none-any.whl", hash = "sha256:2e139a228bcf56dd8b2274a65174d005c4a6b68540ee0bdbb92c76f43f29f7e8"},

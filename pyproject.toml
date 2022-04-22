@@ -17,7 +17,7 @@ gensim = "^4.1.0"
 seaborn = "^0.11.2"
 finntk = "^0.0.73"
 orjson = "^3.6.3"
-duckdb = "^0.3.1"
+duckdb = {version = "0.3.4.dev72", allow-prereleases = true}
 freqknowfit = {git = "https://github.com/frankier/freqknowfit.git", rev = "b0ea2550df69570114a079628c4212e2836d640c"}
 scipy = "^1.7.3"
 

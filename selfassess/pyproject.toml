@@ -13,7 +13,7 @@ aiosqlite = "^0.17.0"
 shortuuid = "^1.0.1"
 user-agents = "^2.2.0"
 alembic = "^1.6.5"
-duckdb = "^0.3.1"
+duckdb = {version = "0.3.4.dev72", allow-prereleases = true}
 langcodes = "^3.1.0"
 pandas = "^1.3.3"
 language-data = "^1.0"
