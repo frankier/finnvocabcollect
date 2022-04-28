@@ -11,7 +11,7 @@ def main(db_in, csvs_out):
     os.makedirs(csvs_out, exist_ok=True)
 
     conn.execute(f"""
-    EXPORT DATABASE '{csvs_out}' (FORMAT CSV, DELIMITER '\t');
+    EXPORT DATABASE '{csvs_out}' (FORMAT CSV, DELIMITER '\t', HEADER TRUE);
     """)
 
 

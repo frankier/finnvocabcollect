@@ -7,6 +7,7 @@ from selfassess.quali import CEFR_SKILLS
 from .utils import get_participant_sessions
 from selfassess.queries import participant_timeline_query
 from datetime import timedelta
+from pandas.core.dtypes.dtypes import CategoricalDtype
 
 
 CEFR_FIELDS = [
@@ -21,8 +22,8 @@ create table participant (
     id int primary key,
     {}
     lived_in_finland int,
-    proof_age varchar,
-    proof_type varchar,
+    proof_age proof_age,
+    proof_type proof_type,
     miniexam_time_secs int,
     miniexam_day int
 );
@@ -36,39 +37,57 @@ def setup_duckdb(db_out):
 
     print("Creating tables")
     conn.execute(
+        """
+    CREATE TYPE proof_age AS ENUM ('lt1', 'lt3', 'lt5', 'gte5');
+    CREATE TYPE proof_type AS ENUM (
+        'yki_intermediate',
+        'yki_advanced',
+        'other',
+        'course_english_degree',
+        'completed_finnish_upper_secondary',
+        'completed_finnish_degree'
+    );
+    CREATE TYPE device_type AS ENUM ('pc', 'mobile', 'tablet', 'unknown');
+    CREATE TYPE miniexam_response_type AS ENUM (
+        'trans_defn',
+        'topic',
+        'donotknow'
+    );
+    CREATE TYPE miniexam_response_lang AS ENUM ('en', 'hu', 'ru', 'fi');
+    CREATE TYPE marker AS ENUM ('ann1', 'ann2', 'corr', 'final');
+        """ + 
         PARTICIPANT_TABLE +
         """
     create table participant_language (
-        participant_id int,
-        language varchar,
-        level int
+        participant_id int not null,
+        language varchar not null,
+        level int not null
     );
     create table selfassess_session (
         id int primary key,
-        participant_id int,
-        device varchar,
-        time_secs int,
-        day int
+        participant_id int not null,
+        device device_type not null,
+        time_secs int not null,
+        day int not null
     );
     create table selfassess_response (
-        session_id int,
-        word varchar,
-        time_usecs int64,
-        rating int
+        session_id int not null,
+        word varchar not null,
+        time_usecs int64 not null,
+        rating int not null
     );
     create table miniexam_response (
         id int primary key,
-        participant_id int,
-        word varchar,
-        type varchar,
-        lang varchar,
-        response varchar,
-        grade int
+        participant_id int not null,
+        word varchar not null,
+        type miniexam_response_type not null,
+        lang miniexam_response_lang,
+        response varchar
     );
     create table miniexam_mark (
-        selfassess_response_id int,
-        marker varchar,
-        mark varchar
+        miniexam_response_id int not null,
+        marker marker not null,
+        mark varchar not null
     );
     """)
     return conn
@@ -80,7 +99,17 @@ def setup_duckdb(db_out):
 def flush_rows(schema, conn, rows):
     if not rows:
         return
-    df = pandas.DataFrame(rows)
+    df = conn.query(f"SELECT * FROM {schema} LIMIT 0;").to_df()
+    cols = []
+    for col_idx, col_name in enumerate(df.columns):
+        col_series = df.iloc[:, col_idx]
+        col_data = [row[col_idx] for row in rows]
+        dtype = col_series.dtype
+        if isinstance(dtype, CategoricalDtype):
+            dtype = "category"
+        new_col_series = pandas.Series(data=col_data, dtype=dtype, name=col_name)
+        cols.append(new_col_series)
+    df = pandas.concat(cols, axis=1)
     conn.register('df', df)
     conn.execute(f"INSERT INTO {schema} SELECT * FROM df;")
     conn.unregister('df')
@@ -222,10 +251,9 @@ def main(db_out, which, marking, use_original_ids):
                 miniexam_response_id,
                 pid,
                 miniexam_slot.word.word,
-                latest_response.response_lang.name if latest_response.response_lang is not None else None,
                 latest_response.response_type.name,
+                latest_response.response_lang.name if latest_response.response_lang is not None else None,
                 latest_response.response,
-                latest_response.mark
             ))
             for marker, mark in mark_lookups[latest_response.id].items():
                 miniexam_marks.append((
