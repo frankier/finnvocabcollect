@@ -1,3 +1,24 @@
+## FinnVocabCollect
+
+This code was used in the collection of
+[TallVocabL2Fi](http://urn.fi/urn:nbn:fi:lb-2022041921).
+
+Robertson, F., Chang & L., Söyrinki, S. (2022).\
+*TallVocabL2Fi: An Extensive Mapping of 15 Finnish L2 Learners' Vocabulary.*\
+In Language Resources and Evaluation Conference (LREC 2022).
+
+This code is not actively developed and is provided as-is for the purposes of
+providing complete information about TallVocabL2Fi. You are welcome to use use
+the code in your own research but it comes unsupported. If you want help
+developing something similar, I may be able to help. Please [contact
+me](https://frankie.robertson.name/) and we can discuss collaboration.
+
+## License
+
+Apache v2
+
+## Basic info
+
 This project has two parts, the word list pipeline, which is
 a [Snakemake](https://snakemake.readthedocs.io/en/stable/) project, and the
 second is the self assessment website itself which is
